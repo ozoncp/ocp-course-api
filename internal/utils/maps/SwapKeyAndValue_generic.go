@@ -6,8 +6,8 @@ import (
 	"fmt"
 )
 
-func MapSwapKeyAndValueTKeyTValue(xs map[TKey]TValue) map[TValue]TKey {
-	res := make(map[TValue]TKey)
+func SwapKeyAndValueTKeyTValue(xs map[TKey]TValue) map[TValue]TKey {
+	res := make(map[TValue]TKey, len(xs))
 	if xs == nil {
 		return res
 	}

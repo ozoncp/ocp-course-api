@@ -45,6 +45,7 @@ tidy:
 
 clean:
 	rm -rf $(executable) $(generated)
+	go clean -cache -testcache $(call trim_right_slash, $(sort $(dir $(go_files))))
 
 prepare:
 	$(run-prepare)

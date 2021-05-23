@@ -2,8 +2,8 @@
 
 package slice
 
-func SliceFilterOutTValue(xs []TValue, skip []TValue) []TValue {
-	filter := make(map[TValue]struct{})
+func FilterOutTValue(xs []TValue, skip []TValue) []TValue {
+	filter := make(map[TValue]struct{}, len(skip))
 	for _, v := range skip {
 		filter[v] = struct{}{}
 	}

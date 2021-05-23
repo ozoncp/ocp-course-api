@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSliceFilterOutTValue(t *testing.T) {
+func TestFilterOutTValue(t *testing.T) {
 	table := []struct {
 		xs     []TValue
 		skip   []TValue
@@ -21,7 +21,7 @@ func TestSliceFilterOutTValue(t *testing.T) {
 	}
 
 	for _, row := range table {
-		got := SliceFilterOutTValue(row.xs, row.skip)
+		got := FilterOutTValue(row.xs, row.skip)
 		assert.EqualValues(t,
 			got, row.expect,
 			fmt.Sprintf("Input: xs: %v; skip: %v", row.xs, row.skip))

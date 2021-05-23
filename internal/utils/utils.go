@@ -4,28 +4,28 @@ import (
 	"log"
 	"os"
 
-	. "github.com/ozoncp/ocp-course-api/api/model"
-	. "github.com/ozoncp/ocp-course-api/internal/utils/slice"
+	"github.com/ozoncp/ocp-course-api/api/model"
+	slice "github.com/ozoncp/ocp-course-api/internal/utils/slice"
 )
 
 func SplitToBulksInt(xs []int, batchSize int) [][]int {
-	return SliceGenerateWindowsInt(xs, batchSize, batchSize)
+	return slice.GenerateWindowsInt(xs, batchSize, batchSize)
 }
 
-func SplitToBulksCourse(xs []Course, batchSize int) [][]Course {
-	return SliceGenerateWindowsModelCourse(xs, batchSize, batchSize)
+func SplitToBulksCourse(xs []model.Course, batchSize int) [][]model.Course {
+	return slice.GenerateWindowsModelCourse(xs, batchSize, batchSize)
 }
 
-func SplitToBulksLesson(xs []Lesson, batchSize int) [][]Lesson {
-	return SliceGenerateWindowsModelLesson(xs, batchSize, batchSize)
+func SplitToBulksLesson(xs []model.Lesson, batchSize int) [][]model.Lesson {
+	return slice.GenerateWindowsModelLesson(xs, batchSize, batchSize)
 }
 
-func SliceToMapCourse(xs []Course) map[uint64]Course {
-	return SliceToMapModelCourseUint64(xs, func(c Course) uint64 { return c.Id })
+func ToMapCourse(xs []model.Course) map[uint64]model.Course {
+	return slice.ToMapModelCourseUint64(xs, func(c model.Course) uint64 { return c.Id })
 }
 
-func SliceToMapLesson(xs []Lesson) map[uint64]Lesson {
-	return SliceToMapModelLessonUint64(xs, func(c Lesson) uint64 { return c.Id })
+func ToMapLesson(xs []model.Lesson) map[uint64]model.Lesson {
+	return slice.ToMapModelLessonUint64(xs, func(c model.Lesson) uint64 { return c.Id })
 }
 
 func RepeatedlyRead(file string, count int) {

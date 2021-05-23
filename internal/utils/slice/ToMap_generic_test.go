@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func ExampleSliceToMapTValueTKey() {
+func ExampleToMapTValueTKey() {
 	type Value struct {
 		id int
 		v  string
@@ -18,7 +18,7 @@ func ExampleSliceToMapTValueTKey() {
 		Value{2, "second"},
 		Value{1, "first"},
 	}
-	res := SliceToMapTValueTKey(xs, func(x TValue) TKey {
+	res := ToMapTValueTKey(xs, func(x TValue) TKey {
 		return x.(Value).id
 	})
 
@@ -30,7 +30,7 @@ func ExampleSliceToMapTValueTKey() {
 	//(2,{2 second})
 }
 
-func TestSliceToMapTValueTKey(t *testing.T) {
+func TestToMapTValueTKey(t *testing.T) {
 	type Value struct {
 		id int
 		v  string
@@ -55,7 +55,7 @@ func TestSliceToMapTValueTKey(t *testing.T) {
 	}
 
 	for _, row := range table {
-		got := SliceToMapTValueTKey(row.in, op)
+		got := ToMapTValueTKey(row.in, op)
 		assert.EqualValues(t, row.expect, got)
 	}
 }
