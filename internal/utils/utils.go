@@ -1,66 +1,59 @@
 package utils
 
-import "fmt"
+import (
+	"log"
+	"os"
 
-func GenerateWindowsInt(src []int, size int, step int) [][]int {
-	res := [][]int{}
-	srcLen := len(src)
-	for i := 0; i < srcLen; i += IfOrElse(i+size < srcLen, step, size).(int) {
-		end := MinInt(i+size, srcLen)
-		res = append(res, src[i:end])
-	}
-	return res
+	. "github.com/ozoncp/ocp-course-api/api/model"
+	. "github.com/ozoncp/ocp-course-api/internal/utils/slice"
+)
+
+func SplitToBulksInt(xs []int, batchSize int) [][]int {
+	return SliceGenerateWindowsInt(xs, batchSize, batchSize)
 }
 
-func SplitOnBunchesInt(src []int, size int) [][]int {
-	return GenerateWindowsInt(src, size, size)
+func SplitToBulksCourse(xs []Course, batchSize int) [][]Course {
+	return SliceGenerateWindowsModelCourse(xs, batchSize, batchSize)
 }
 
-func SwapKeyValueIntString(src map[int]string) map[string]int {
-	res := make(map[string]int)
-
-	if src == nil {
-		return res
-	}
-
-	for k, v := range src {
-		if pk, contains := res[v]; contains {
-			panic(
-				fmt.Sprintf("The '%v' is not unique. Keys '%v' and '%v' have it",
-					v, k, pk))
-		}
-		res[v] = k
-	}
-
-	return res
+func SplitToBulksLesson(xs []Lesson, batchSize int) [][]Lesson {
+	return SliceGenerateWindowsModelLesson(xs, batchSize, batchSize)
 }
 
-func FilterSliceOfInt(in []int, skip []int) []int {
-	filter := make(map[int]struct{})
-	for _, v := range skip {
-		filter[v] = struct{}{}
-	}
-	res := []int{}
-	for _, v := range in {
-		if _, shouldSkip := filter[v]; !shouldSkip {
-			res = append(res, v)
-		}
-	}
-	return res
+func SliceToMapCourse(xs []Course) map[uint64]Course {
+	return SliceToMapModelCourseUint64(xs, func(c Course) uint64 { return c.Id })
 }
 
-func IfOrElse(cond bool, ifTrue, ifFalse interface{}) interface{} {
-	if cond {
-		return ifTrue
-	} else {
-		return ifFalse
-	}
+func SliceToMapLesson(xs []Lesson) map[uint64]Lesson {
+	return SliceToMapModelLessonUint64(xs, func(c Lesson) uint64 { return c.Id })
 }
 
-func MinInt(a, b int) int {
-	if a < b {
-		return a
-	} else {
-		return b
+func RepeatedlyRead(file string, count int) {
+	for i := 0; i < count; i++ {
+		func() {
+			if fh, err := os.OpenFile(file, os.O_RDONLY|os.O_EXCL, 0666); err != nil {
+				log.Fatalf("Can't open the file %v. %v\n", file, err)
+			} else {
+				defer func() {
+					if err := fh.Close(); err != nil {
+						log.Fatalf("Can't close the file %v. %v", fh, err)
+					}
+					log.Printf("The file %v (%v) closed.\n", fh.Name(), fh.Fd())
+				}()
+				info, err := fh.Stat()
+				if err != nil {
+					log.Fatalf("Can't get a file info. %v", err)
+					return
+				}
+				buf := make([]byte, info.Size())
+				if r, err := fh.Read(buf); err != nil {
+					log.Fatalf("Can't read! %v\n", err)
+					return
+				} else {
+					log.Printf("read %v bytes\n", r)
+				}
+				os.Stdout.Write(buf)
+			}
+		}()
 	}
 }
