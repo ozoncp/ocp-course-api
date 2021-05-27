@@ -50,7 +50,10 @@ clean:
 prepare:
 	$(run-prepare)
 
-.PHONY: test fmt tidy clean all prepare
+lint:
+	golangci-lint run -v
+
+.PHONY: test fmt tidy clean all prepare lint
 
 define run-prepare =
 go mod tidy
