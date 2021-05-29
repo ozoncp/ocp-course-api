@@ -1,18 +1,16 @@
 trim_right_slash = $(patsubst %/,%,$(1))
 
-go_files = $(foreach \
-		f,\
-		$(shell find . -name *.go -print),\
-		$(if $(findstring /gen-, $f),,$f))
+go_files = $(filter-out %.gen.go, $(shell find . -name *.go -print))
 
 test_files = $(filter %_test.go, $(go_files))
 
 generics = $(filter %_generic.go, $(go_files))
 
-generated = $(foreach \
-		f,\
-		$(generics),\
-		$(dir $f)gen-$(notdir $f))
+generated = $(generics:.go=.go.gen.go)
+
+mocks = $(shell grep -o "^[^\#%]\+go.mock.go:" Makefile | sed 's/\([^:]\+\)\:/\1/' | paste -sd ' ')
+
+generated += $(mocks)
 
 pkgs_with_generics = $(call trim_right_slash, $(sort $(dir $(generics))))
 
@@ -28,14 +26,26 @@ all: $(executable)
 $(executable): $(generated) $(filter-out %_test.go, $(go_files)) go.sum
 	go build $(cmds_dir)$@
 
-$(generated) &: $(generics) go.sum
-	go generate $(pkgs_with_generics)
+internal/flusher/flusher_generic.go.gen.go: internal/utils/slice/sliding_generic.go.gen.go
 
 go.sum: go.mod
 	$(run-prepare)
 
+internal/mock_repo/repo.go.mock.go: internal/repo/repo_generic.go
+internal/mock_flusher/flusher.go.mock.go: internal/flusher/flusher_generic.go
+
+%generic.go.gen.go: %generic.go
+	@gen_types=$(shell head -n 1 $< | sed 's/^.\+ gen \(".\+"\)$$/\1/');\
+	echo genny -out $@ -in $< gen "$${gen_types}";\
+	genny -out $@ -in $< gen "$${gen_types}"
+
+%.go.mock.go:
+	@mkdir -p $(@D)
+	mockgen -source $< -destination $@ -package $(notdir $(@D))
+
 test: $(generated)
-	go test $(pkgs_with_test)
+	#go test $(pkgs_with_test)
+	ginkgo $(pkgs_with_test)
 
 fmt:
 	gofmt -w -l .
@@ -58,8 +68,8 @@ generate: $(generated)
 .PHONY: test fmt tidy clean all prepare lint generate
 
 define run-prepare =
-go mod tidy
 go mod download
 go get github.com/cheekybits/genny
-go mod tidy
+go get github.com/onsi/ginkgo/ginkgo
+go get github.com/golang/mock/mockgen
 endef

@@ -4,15 +4,13 @@ package slice
 
 import "github.com/ozoncp/ocp-course-api/internal/utils/commons"
 
-func GenerateWindowsTValue(xs []TValue, size int, step int) [][]TValue {
+func SlidingTValue(xs []TValue, size int, step int, f func(pos int, window []TValue) bool) {
 	srcLen := len(xs)
-	res := make([][]TValue, 0)
 	for i := 0; i < srcLen; i += step {
 		end := commons.MinInt(i+size, srcLen)
-		res = append(res, xs[i:end:end])
-		if i+size >= srcLen {
+		needContinue := f(i, xs[i:end:end])
+		if !needContinue || (i+size >= srcLen) {
 			break
 		}
 	}
-	return res
 }
