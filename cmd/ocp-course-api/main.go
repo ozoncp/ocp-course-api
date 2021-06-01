@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/ozoncp/ocp-course-api/api/model"
 	"github.com/ozoncp/ocp-course-api/internal/flusher"
@@ -33,7 +34,11 @@ func main() {
 	fmt.Println("Author: Aleksei Shashev")
 	fmt.Println("Site: https://github.com/ozoncp/ocp-course-api")
 
-	f := flusher.NewFlusher(&fakeRepoCourse{}, &fakeRepoLesson{}, commons.NewNaturalIntUnsafe(32))
+	batchSize, err := commons.NewNaturalInt(32)
+	if err != nil {
+		log.Fatalf("Can't set batch size: %v", err)
+	}
+	f := flusher.NewFlusher(&fakeRepoCourse{}, &fakeRepoLesson{}, batchSize)
 	fmt.Println(f.FlushModelCourse([]model.Course{{Id: 0, ClassroomId: 0, Name: "c0", Stream: "s0"}}))
 	fmt.Println(f.FlushModelLesson([]model.Lesson{{Id: 0, CourseId: 0, Number: 0, Name: "l0"}}))
 }
