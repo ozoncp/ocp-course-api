@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	. "github.com/ozoncp/ocp-course-api/internal/utils/commons"
 )
 
 func TestSlidingTValue(t *testing.T) {
@@ -31,7 +33,7 @@ func TestSlidingTValue(t *testing.T) {
 
 	for _, row := range table {
 		got := make([][]TValue, 0)
-		SlidingTValue(row.src, row.size, row.step, testFunc(&got))
+		SlidingTValue(row.src, NewNaturalIntUnsafe(row.size), NewNaturalIntUnsafe(row.step), testFunc(&got))
 		assert.EqualValues(t, row.expect, got,
 			"Parameters src: %v; size: %v; step: %v", row.src, row.size, row.step)
 	}

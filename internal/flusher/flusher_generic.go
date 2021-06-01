@@ -5,6 +5,7 @@ package flusher
 import (
 	"github.com/cheekybits/genny/generic"
 
+	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
 	"github.com/ozoncp/ocp-course-api/internal/utils/slice"
 )
 
@@ -20,7 +21,7 @@ type repoTValue interface {
 
 type flusherTValue struct {
 	repo      repoTValue
-	batchSize int
+	batchSize commons.NaturalInt
 }
 
 func (this *flusherTValue) FlushTValue(vs []TValue) []TValue {
@@ -36,6 +37,6 @@ func (this *flusherTValue) FlushTValue(vs []TValue) []TValue {
 	return res
 }
 
-func NewFlusherTValue(repo repoTValue, batchSize int) FlusherTValue {
+func NewFlusherTValue(repo repoTValue, batchSize commons.NaturalInt) FlusherTValue {
 	return &flusherTValue{repo, batchSize}
 }

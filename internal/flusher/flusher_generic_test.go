@@ -10,6 +10,7 @@ import (
 	. "github.com/ozoncp/ocp-course-api/internal/flusher"
 	"github.com/ozoncp/ocp-course-api/internal/mock_repo"
 	"github.com/ozoncp/ocp-course-api/internal/repo"
+	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
 )
 
 var _ = Describe("FlusherGeneric", func() {
@@ -29,7 +30,7 @@ var _ = Describe("FlusherGeneric", func() {
 	})
 
 	JustBeforeEach(func() {
-		flusher = NewFlusherTValue(mockRepo, batchSize)
+		flusher = NewFlusherTValue(mockRepo, commons.NewNaturalIntUnsafe(batchSize))
 	})
 
 	AfterEach(func() {
