@@ -1,4 +1,4 @@
-//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "TValue=int,model.Course,model.Lesson"
+//go:generate genny -in=$GOFILE -out=$GOFILE.gen.go gen "TValue=int,model.Course,model.Lesson"
 
 package slice
 

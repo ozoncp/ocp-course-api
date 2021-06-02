@@ -1,4 +1,4 @@
-//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "TKey=int,uint TValue=string,model.Course,model.Lesson"
+//go:generate genny -in=$GOFILE -out=$GOFILE.gen.go gen "TKey=int,uint TValue=string,model.Course,model.Lesson"
 
 package maps
 

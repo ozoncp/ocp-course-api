@@ -17,6 +17,8 @@
 # vendor/
 
 gen-*.go
+*.gen.go
+*.mock.go
 /go.sum
 /ocp-course-api
 /utils-demo
