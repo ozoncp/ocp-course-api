@@ -6,22 +6,27 @@ import (
 
 type NaturalInt struct {
 	value int
+	new   bool
 }
 
 func (this NaturalInt) ToInt() int {
+	if !this.new {
+		panic("the instance of NaturalInt was wrong created")
+	}
 	return this.value
 }
 
 func NewNaturalIntPanic(v int) NaturalInt {
-	if v < 1 {
-		panic(fmt.Sprintf("A natural int must be greater then 0, got %v", v))
+	res, err := NewNaturalInt(v)
+	if err != nil {
+		panic(err)
 	}
-	return NaturalInt{v}
+	return res
 }
 
 func NewNaturalInt(v int) (NaturalInt, error) {
 	if v < 1 {
-		return NaturalInt{v}, fmt.Errorf("a natural int must be greater then 0, got %v", v)
+		return NaturalInt{1, false}, fmt.Errorf("a natural int must be greater then 0, got %v", v)
 	}
-	return NaturalInt{v}, nil
+	return NaturalInt{v, true}, nil
 }

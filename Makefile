@@ -33,9 +33,10 @@ go.sum: go.mod
 
 internal/mock_repo/repo.go.mock.go: internal/repo/repo_generic.go
 internal/mock_flusher/flusher.go.mock.go: internal/flusher/flusher_generic.go
+internal/mock_saver/flush_alarm.go.mock.go: internal/saver/flush_alarm.go
 
 %generic.go.gen.go: %generic.go
-	@gen_types=$(shell head -n 1 $< | sed 's/^.\+ gen \(".\+"\)$$/\1/');\
+	@gen_types=$(shell grep '//go:generate .*genny' $< | head -n 1 | sed 's/^.\+ gen \(".\+"\)$$/\1/');\
 	echo genny -out $@ -in $< gen "$${gen_types}";\
 	genny -out $@ -in $< gen "$${gen_types}"
 
