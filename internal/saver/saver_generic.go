@@ -21,8 +21,9 @@ type flusherTValue interface {
 }
 
 type saverTValue struct {
-	mu       sync.Mutex
-	blockCh  chan struct{}
+	mu       *sync.Mutex
+	blockCv  *sync.Cond
+	closed   bool
 	closeCh  chan struct{}
 	capacity commons.NaturalInt
 	os       OverflowStrategy
@@ -37,6 +38,10 @@ func (this *saverTValue) SaveTValue(v TValue) {
 
 	if !this.os.new {
 		panic("the instance of OverflowStrategy was wrong created")
+	}
+
+	if this.closed {
+		return
 	}
 
 	switch this.os {
@@ -55,25 +60,12 @@ func (this *saverTValue) SaveTValue(v TValue) {
 		}
 
 	case OverflowStrategyBlock():
-		if len(this.buffer) < this.capacity.ToInt() {
+		for !this.closed && (len(this.buffer) >= this.capacity.ToInt()) {
+			this.blockCv.Wait()
+		}
+
+		if !this.closed {
 			this.buffer = append(this.buffer, v)
-		} else {
-			this.mu.Unlock()
-		waitingLoop:
-			for {
-				_, ok := <-this.blockCh
-				this.mu.Lock()
-				switch {
-				case !ok:
-					return
-				case len(this.buffer) == this.capacity.ToInt():
-					this.mu.Unlock()
-					continue
-				default:
-					this.buffer = append(this.buffer, v)
-					break waitingLoop
-				}
-			}
 		}
 	}
 }
@@ -81,8 +73,9 @@ func (this *saverTValue) SaveTValue(v TValue) {
 func (this *saverTValue) Close() {
 	this.mu.Lock()
 	defer this.mu.Unlock()
+	this.closed = true
+	this.blockCv.Broadcast()
 	this.alarm.Close()
-	close(this.blockCh)
 	close(this.closeCh)
 	if len(this.buffer) > 0 {
 		this.buffer = this.flusher.FlushTValue(this.buffer)
@@ -99,16 +92,7 @@ func (this *saverTValue) flush() {
 	if cap(this.buffer) < this.capacity.ToInt() {
 		this.buffer = append(this.newBuffer(), this.buffer...)
 	}
-	func() {
-		defer func() {
-			err := recover() //mute possible panic if the blockCh is closed
-			_ = err
-		}()
-		select {
-		case this.blockCh <- struct{}{}:
-		default: //nobody are waiting data from the blockCh
-		}
-	}()
+	this.blockCv.Broadcast()
 }
 
 func (this *saverTValue) newBuffer() []TValue {
@@ -117,18 +101,18 @@ func (this *saverTValue) newBuffer() []TValue {
 
 func (this *saverTValue) start() {
 	go func() {
-	waitingLoop:
-		for {
+		waitingLoop := true
+		for waitingLoop {
 			select {
 			case _, ok := <-this.alarm.C():
 				if ok {
 					this.flush()
 				} else {
-					break waitingLoop
+					waitingLoop = false
 				}
 			case _, ok := <-this.closeCh:
 				_ = ok
-				break waitingLoop
+				waitingLoop = false
 			}
 		}
 	}()
@@ -139,9 +123,11 @@ func NewSaverTValue(
 	alarm FlushAlarm,
 	capacity commons.NaturalInt,
 	os OverflowStrategy) SaverTValue {
+	mu := &sync.Mutex{}
 	res := &saverTValue{
-		mu:       sync.Mutex{},
-		blockCh:  make(chan struct{}),
+		mu:       mu,
+		blockCv:  sync.NewCond(mu),
+		closed:   false,
 		closeCh:  make(chan struct{}),
 		os:       os,
 		capacity: capacity,
