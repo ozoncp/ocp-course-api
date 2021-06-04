@@ -109,8 +109,7 @@ func (this *saverTValue) start() {
 				} else {
 					return
 				}
-			case _, ok := <-this.closeCh:
-				_ = ok
+			case <-this.closeCh:
 				return
 			}
 		}

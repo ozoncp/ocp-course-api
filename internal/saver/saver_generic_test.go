@@ -175,8 +175,7 @@ func TestSaverGenericCheckOverflowStrategyBlock(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	select {
-	case v := <-ch:
-		_ = v
+	case <-ch:
 		assert.Fail(t, "SaveTValue is not blocking")
 	default:
 	}
@@ -185,8 +184,7 @@ func TestSaverGenericCheckOverflowStrategyBlock(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	select {
-	case v := <-ch:
-		_ = v
+	case <-ch:
 	default:
 		assert.Fail(t, "SaveTValue is still blocking")
 	}

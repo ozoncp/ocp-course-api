@@ -33,14 +33,12 @@ func NewFlushAlarmTicker(d time.Duration) (FlushAlarm, error) {
 	go func() {
 		for {
 			select {
-			case v := <-alarm.ticker.C:
-				_ = v
+			case <-alarm.ticker.C:
 				select {
 				case alarm.ch <- struct{}{}:
 				default:
 				}
-			case v := <-alarm.closeCh:
-				_ = v
+			case <-alarm.closeCh:
 				close(alarm.ch)
 				return
 			}
