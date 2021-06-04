@@ -101,18 +101,17 @@ func (this *saverTValue) newBuffer() []TValue {
 
 func (this *saverTValue) start() {
 	go func() {
-		waitingLoop := true
-		for waitingLoop {
+		for {
 			select {
 			case _, ok := <-this.alarm.C():
 				if ok {
 					this.flush()
 				} else {
-					waitingLoop = false
+					return
 				}
 			case _, ok := <-this.closeCh:
 				_ = ok
-				waitingLoop = false
+				return
 			}
 		}
 	}()

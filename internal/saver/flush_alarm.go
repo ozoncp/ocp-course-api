@@ -31,8 +31,7 @@ func NewFlushAlarmTicker(d time.Duration) (FlushAlarm, error) {
 	}
 	alarm := &flushAlarm{ticker: time.NewTicker(d), ch: make(chan struct{}), closeCh: make(chan struct{})}
 	go func() {
-		waitingLoop := true
-		for waitingLoop {
+		for {
 			select {
 			case v := <-alarm.ticker.C:
 				_ = v
@@ -43,7 +42,7 @@ func NewFlushAlarmTicker(d time.Duration) (FlushAlarm, error) {
 			case v := <-alarm.closeCh:
 				_ = v
 				close(alarm.ch)
-				waitingLoop = false
+				return
 			}
 		}
 	}()
