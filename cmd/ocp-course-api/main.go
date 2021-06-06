@@ -1,44 +1,42 @@
 package main
 
 import (
-	"errors"
+	"flag"
 	"fmt"
-	"log"
 
-	"github.com/ozoncp/ocp-course-api/api/model"
-	"github.com/ozoncp/ocp-course-api/internal/flusher"
-	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
+	"google.golang.org/grpc"
+
+	"github.com/ozoncp/ocp-course-api/internal/api"
+	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-course-api"
 )
 
-type fakeRepoCourse struct{}
-type fakeRepoLesson struct{}
-
-func (this *fakeRepoCourse) AddModelCourse(v model.Course) (uint64, error) {
-	return 0, errors.New("not implemented")
-}
-
-func (this *fakeRepoCourse) AddModelCourses(v []model.Course) error {
-	return errors.New("not implemented")
-}
-
-func (this *fakeRepoLesson) AddModelLesson(v model.Lesson) (uint64, error) {
-	return 0, errors.New("not implemented")
-}
-
-func (this *fakeRepoLesson) AddModelLessons(v []model.Lesson) error {
-	return errors.New("not implemented")
-}
+var (
+	listenInterface = flag.String("interface", "0.0.0.0", "listening interface")
+	grpcPort        = flag.Int("grpc-port", 7002, "port for gRPC server endpoint")
+	httpPort        = flag.Int("http-port", 7000, "port for HTTP server endpoint")
+	swaggerFile     = flag.String("swagger", "swagger/ocp-coure-api.swagger.json", "path to a file with the swagger definitions")
+)
 
 func main() {
 	fmt.Println("Project: ocp-course-api")
 	fmt.Println("Author: Aleksei Shashev")
 	fmt.Println("Site: https://github.com/ozoncp/ocp-course-api")
 
-	batchSize, err := commons.NewNaturalInt(32)
+	flag.Parse()
+
+	config := api.NewConfig(*listenInterface, *grpcPort, *httpPort, *swaggerFile)
+
+	go func() {
+		err := api.RunGrpc(config, func(s grpc.ServiceRegistrar) {
+			pb.RegisterOcpCourseApiServer(s, api.NewOcpCourseApi())
+		})
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	err := api.RunHttp(config, pb.RegisterOcpCourseApiHandlerFromEndpoint)
 	if err != nil {
-		log.Fatalf("Can't set batch size: %v", err)
+		panic(err)
 	}
-	f := flusher.NewFlusher(&fakeRepoCourse{}, &fakeRepoLesson{}, batchSize)
-	fmt.Println(f.FlushModelCourse([]model.Course{{Id: 0, ClassroomId: 0, Name: "c0", Stream: "s0"}}))
-	fmt.Println(f.FlushModelLesson([]model.Lesson{{Id: 0, CourseId: 0, Number: 0, Name: "l0"}}))
 }

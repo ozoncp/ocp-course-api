@@ -19,7 +19,10 @@
 gen-*.go
 *.gen.go
 *.mock.go
+/vendor.protogen
 /go.sum
 /ocp-course-api
 /utils-demo
 /repeatedly-read
+/pkg
+/swagger

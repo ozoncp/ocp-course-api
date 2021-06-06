@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "messages.proto";
+import "google/api/annotations.proto";
+
+package ocp.course.api;
+
+option go_package = "github.com/ozoncp/ocp-course-api/api/ocp-course-api;ocp_course_api";
+
+service OcpCourseApi {
+    rpc ListCoursesV1(ListCoursesV1Request) returns (ListCoursesV1Response) {
+        option (google.api.http) = {
+            post: "/v1/courses"
+            body: "*"
+        };
+    }
+
+}
+

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+
+package ocp.course.api;
+
+option go_package = "github.com/ozoncp/ocp-course-api/api/ocp-course-api;ocp_course_api";
+
+message Course {
+    uint64 id = 1 [(validate.rules).uint64.gt = 0];
+    uint64 classroom_id = 2 [(validate.rules).uint64.gt = 0];
+    string name = 3 [(validate.rules).string.min_len = 1];
+    string stream = 4 [(validate.rules).string.min_len = 1];
+}
+
+message ListCoursesV1Request {
+    uint64 limit = 1 [(validate.rules).uint64 = {gt:0, lte:1000}];
+    uint64 offset = 2;
+}
+
+message ListCoursesV1Response {
+    repeated Course courses = 1;
+}
