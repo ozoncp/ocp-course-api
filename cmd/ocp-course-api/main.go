@@ -14,7 +14,7 @@ var (
 	listenInterface = flag.String("interface", "0.0.0.0", "listening interface")
 	grpcPort        = flag.Int("grpc-port", 7002, "port for gRPC server endpoint")
 	httpPort        = flag.Int("http-port", 7000, "port for HTTP server endpoint")
-	swaggerFile     = flag.String("swagger", "swagger/ocp-coure-api.swagger.json", "path to a file with the swagger definitions")
+	swaggerFile     = flag.String("swagger", "swagger/ocp-course-api.swagger.json", "path to a file with the swagger definitions")
 )
 
 func main() {

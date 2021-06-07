@@ -21,3 +21,27 @@ message ListCoursesV1Request {
 message ListCoursesV1Response {
     repeated Course courses = 1;
 }
+
+message DescribeCourseV1Request {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DescribeCourseV1Response {
+    Course course = 1;
+}
+
+message CreateCourseV1Request {
+    Course course = 1 [(validate.rules).any.required = true];
+}
+
+message CreateCourseV1Response {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveCourseV1Request {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveCourseV1Response {
+    bool found = 1;
+}
