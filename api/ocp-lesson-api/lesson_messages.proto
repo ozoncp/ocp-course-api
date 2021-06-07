@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+
+package ocp.lesson.api;
+
+option go_package = "github.com/ozoncp/ocp-course-api/api/ocp-lesson-api;ocp_lesson_api";
+
+message Lesson {
+    uint64 id = 1 [(validate.rules).uint64.gt = 0];
+    uint64 course_id = 2 [(validate.rules).uint64.gt = 0];
+    uint32 number = 3 [(validate.rules).uint32.gt = 0];
+    string name = 4 [(validate.rules).string.min_len = 1];
+}
+
+message ListLessonsV1Request {
+    uint64 limit = 1 [(validate.rules).uint64 = {gt:0, lte:1000}];
+    uint64 offset = 2;
+    uint64 course_id = 3;
+}
+
+message ListLessonsV1Response {
+    repeated Lesson lessons = 1;
+}
+
+message DescribeLessonV1Request {
+    uint64 lesson_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DescribeLessonV1Response {
+    Lesson lesson = 1;
+}
+
+message CreateLessonV1Request {
+    Lesson lesson = 1 [(validate.rules).any.required = true];
+}
+
+message CreateLessonV1Response {
+    uint64 lesson_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveLessonV1Request {
+    uint64 lesson_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveLessonV1Response {
+    bool found = 1;
+}

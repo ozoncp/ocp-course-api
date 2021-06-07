@@ -21,6 +21,7 @@ pbs = $(shell grep -o "^[^\#%]\+\(pb.go\|pb.gw.go\|pb.validate.go\):" Makefile |
 generated += $(mocks)
 generated += $(pbs)
 generated += swagger/ocp-course-api.swagger.json
+generated += swagger/ocp-lesson-api.swagger.json
 
 pkgs_with_generics = $(call trim_right_slash, $(sort $(dir $(generics))))
 
@@ -45,12 +46,19 @@ internal/mock_repo/repo.go.mock.go: internal/repo/repo_generic.go
 internal/mock_flusher/flusher.go.mock.go: internal/flusher/flusher_generic.go
 internal/mock_saver/flush_alarm.go.mock.go: internal/saver/flush_alarm.go
 
-pkg/ocp-course-api/messages.pb.go: api/ocp-course-api/messages.proto
-pkg/ocp-course-api/messages.pb.validate.go: api/ocp-course-api/messages.proto
-pkg/ocp-course-api/service_grpc.pb.go: api/ocp-course-api/service.proto
-pkg/ocp-course-api/service.pb.gw.go: api/ocp-course-api/service.proto
+pkg/ocp-course-api/course_messages.pb.go: api/ocp-course-api/course_messages.proto
+pkg/ocp-course-api/course_messages.pb.validate.go: api/ocp-course-api/course_messages.proto
+pkg/ocp-course-api/course_service_grpc.pb.go: api/ocp-course-api/course_service.proto
+pkg/ocp-course-api/course_service.pb.gw.go: api/ocp-course-api/course_service.proto
 
-swagger/ocp-course-api.swagger.json:api/ocp-course-api/service.proto
+swagger/ocp-course-api.swagger.json:api/ocp-course-api/course_service.proto
+
+pkg/ocp-lesson-api/lesson_messages.pb.go: api/ocp-lesson-api/lesson_messages.proto
+pkg/ocp-lesson-api/lesson_messages.pb.validate.go: api/ocp-lesson-api/lesson_messages.proto
+pkg/ocp-lesson-api/lesson_service_grpc.pb.go: api/ocp-lesson-api/lesson_service.proto
+pkg/ocp-lesson-api/lesson_service.pb.gw.go: api/ocp-lesson-api/lesson_service.proto
+
+swagger/ocp-lesson-api.swagger.json:api/ocp-lesson-api/lesson_service.proto
 
 %generic.go.gen.go: %generic.go
 	@gen_types=$(shell grep '//go:generate .*genny' $< | head -n 1 | sed 's/^.\+ gen \(".\+"\)$$/\1/');\

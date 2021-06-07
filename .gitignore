@@ -22,6 +22,7 @@ gen-*.go
 /vendor.protogen
 /go.sum
 /ocp-course-api
+/ocp-lesson-api
 /utils-demo
 /repeatedly-read
 /pkg

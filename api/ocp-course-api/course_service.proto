@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "messages.proto";
+import "course_messages.proto";
 import "google/api/annotations.proto";
 
 package ocp.course.api;

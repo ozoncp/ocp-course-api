@@ -46,9 +46,9 @@ func (*ocpCourseApiServer) DescribeCourseV1(
 	log.Info().Msgf("DescribeCourseV1Request: %v", req)
 
 	switch req.GetCourseId() {
-	case 1:
+	case c1.Id:
 		return &pb.DescribeCourseV1Response{Course: &c1}, nil
-	case 2:
+	case c2.Id:
 		return &pb.DescribeCourseV1Response{Course: &c2}, nil
 	}
 
@@ -68,7 +68,7 @@ func (*ocpCourseApiServer) CreateCourseV1(
 		return nil, status.Errorf(codes.InvalidArgument, "Wrong request: %v", err)
 	}
 
-	if req.GetCourse().Id == 1 || req.GetCourse().Id == 2 {
+	if req.GetCourse().Id == c1.Id || req.GetCourse().Id == c2.Id {
 		return nil, status.Errorf(codes.AlreadyExists, codes.Unimplemented.String())
 	}
 	return &pb.CreateCourseV1Response{CourseId: req.GetCourse().Id}, nil
