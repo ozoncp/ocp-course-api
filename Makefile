@@ -131,6 +131,7 @@ go get github.com/golang/protobuf/descriptor@v1.5.2
 go get github.com/golang/protobuf/proto@v1.5.2
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 mkdir -p vendor.protogen
 @if [ ! -d vendor.protogen/google ]; then \
 	git clone --depth=1 https://github.com/googleapis/googleapis vendor.protogen/googleapis &&\
