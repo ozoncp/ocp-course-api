@@ -107,7 +107,7 @@ tidy:
 	go mod tidy
 
 clean:
-	rm -rf $(executable) $(generated)
+	rm -rf $(executable) $(filter-out pkg/%,$(generated))
 	go clean -cache -testcache $(call trim_right_slash, $(sort $(dir $(go_files))))
 
 prepare:

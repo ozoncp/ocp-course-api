@@ -25,5 +25,4 @@ gen-*.go
 /ocp-lesson-api
 /utils-demo
 /repeatedly-read
-/pkg
 /swagger
