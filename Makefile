@@ -1,6 +1,11 @@
 trim_right_slash = $(patsubst %/,%,$(1))
 
+go_path = $(shell go env GOPATH)
+
+protoc_gen_validate = github.com/envoyproxy/protoc-gen-validate@v0.6.1
+
 pb_includes=-I./vendor.protogen
+pb_includes+=-I$(go_path)/pkg/mod/$(protoc_gen_validate)
 
 go_files = $(filter-out %.pb.go, \
             $(filter-out %.pb.gw.go, \
@@ -132,16 +137,12 @@ go get github.com/golang/protobuf/proto@v1.5.2
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
-go install github.com/envoyproxy/protoc-gen-validate
+go install $(protoc_gen_validate)
 mkdir -p vendor.protogen
 @if [ ! -d vendor.protogen/google ]; then \
 	git clone --depth=1 https://github.com/googleapis/googleapis vendor.protogen/googleapis &&\
 	mkdir -p  vendor.protogen/google/ &&\
 	mv vendor.protogen/googleapis/google/api vendor.protogen/google &&\
 	rm -rf vendor.protogen/googleapis ;\
-fi
-@if [ ! -d vendor.protogen/github.com/envoyproxy ]; then \
-	mkdir -p vendor.protogen/github.com/envoyproxy &&\
-	git clone --depth=1 https://github.com/envoyproxy/protoc-gen-validate vendor.protogen/github.com/envoyproxy/protoc-gen-validate ;\
 fi
 endef
