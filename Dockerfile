@@ -1,9 +1,9 @@
 FROM golang AS builder
 
-RUN apt update -y
-RUN apt upgrade -y
+RUN apt-get update -y
+RUN apt-get upgrade -y
 
-RUN apt install -y locales
+RUN apt-get install -y locales
 
 RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
@@ -11,8 +11,8 @@ RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment && \
     locale-gen en_US.UTF-8
 
 #RUN sudo -S DEBIAN_FRONTEND="noninteractive" apt install -y golang
-RUN apt install -y ca-certificates && update-ca-certificates
-RUN apt install -y make protobuf-compiler
+RUN apt-get install -y ca-certificates && update-ca-certificates
+RUN apt-get install -y make protobuf-compiler
 
 COPY . /root/ocp-course-api
 
