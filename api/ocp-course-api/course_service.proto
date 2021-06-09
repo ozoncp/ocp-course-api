@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-import "course_messages.proto";
 import "google/api/annotations.proto";
+import "validate/validate.proto";
 
 package ocp.course.api;
 
@@ -34,3 +34,42 @@ service OcpCourseApi {
     }
 }
 
+message Course {
+    uint64 id = 1 [(validate.rules).uint64.gt = 0];
+    uint64 classroom_id = 2 [(validate.rules).uint64.gt = 0];
+    string name = 3 [(validate.rules).string.min_len = 1];
+    string stream = 4 [(validate.rules).string.min_len = 1];
+}
+
+message ListCoursesV1Request {
+    uint64 limit = 1 [(validate.rules).uint64 = {gt:0, lte:1000}];
+    uint64 offset = 2;
+}
+
+message ListCoursesV1Response {
+    repeated Course courses = 1;
+}
+
+message DescribeCourseV1Request {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DescribeCourseV1Response {
+    Course course = 1;
+}
+
+message CreateCourseV1Request {
+    Course course = 1 [(validate.rules).any.required = true];
+}
+
+message CreateCourseV1Response {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveCourseV1Request {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveCourseV1Response {
+    bool found = 1;
+}

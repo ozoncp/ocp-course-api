@@ -15,6 +15,7 @@ require (
 	go.uber.org/goleak v1.1.10
 	google.golang.org/genproto v0.0.0-20210607140030-00d4fb20b1ae // indirect
 	google.golang.org/grpc v1.38.0
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
 replace github.com/ozoncp/ocp-course-api/pkg/ocp-course-api => ./pkg/ocp-course-api

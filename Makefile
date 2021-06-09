@@ -51,15 +51,15 @@ internal/mock_repo/repo.go.mock.go: internal/repo/repo_generic.go
 internal/mock_flusher/flusher.go.mock.go: internal/flusher/flusher_generic.go
 internal/mock_saver/flush_alarm.go.mock.go: internal/saver/flush_alarm.go
 
-pkg/ocp-course-api/course_messages.pb.go: api/ocp-course-api/course_messages.proto
-pkg/ocp-course-api/course_messages.pb.validate.go: api/ocp-course-api/course_messages.proto
+pkg/ocp-course-api/course_service.pb.go: api/ocp-course-api/course_service.proto
+pkg/ocp-course-api/course_service.pb.validate.go: api/ocp-course-api/course_service.proto
 pkg/ocp-course-api/course_service_grpc.pb.go: api/ocp-course-api/course_service.proto
 pkg/ocp-course-api/course_service.pb.gw.go: api/ocp-course-api/course_service.proto
 
 swagger/ocp-course-api.swagger.json:api/ocp-course-api/course_service.proto
 
-pkg/ocp-lesson-api/lesson_messages.pb.go: api/ocp-lesson-api/lesson_messages.proto
-pkg/ocp-lesson-api/lesson_messages.pb.validate.go: api/ocp-lesson-api/lesson_messages.proto
+pkg/ocp-lesson-api/lesson_service.pb.go: api/ocp-lesson-api/lesson_service.proto
+pkg/ocp-lesson-api/lesson_service.pb.validate.go: api/ocp-lesson-api/lesson_service.proto
 pkg/ocp-lesson-api/lesson_service_grpc.pb.go: api/ocp-lesson-api/lesson_service.proto
 pkg/ocp-lesson-api/lesson_service.pb.gw.go: api/ocp-lesson-api/lesson_service.proto
 
@@ -118,6 +118,9 @@ clean:
 	rm -rf $(executable)
 	go clean -cache -testcache $(call trim_right_slash, $(sort $(dir $(go_files))))
 
+clean_generate:
+	rm -rf $(generated)
+
 prepare:
 	$(run-prepare)
 
@@ -126,7 +129,7 @@ lint:
 
 generate: $(generated)
 
-.PHONY: test fmt tidy clean all prepare lint generate
+.PHONY: test fmt tidy clean all prepare lint generate clean_generate
 
 define run-prepare =
 go mod download
