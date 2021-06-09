@@ -48,7 +48,8 @@ func RunHttp(config *Config, registrator func(context.Context, *runtime.ServeMux
 func RunGrpc(config *Config, registrator func(grpc.ServiceRegistrar)) error {
 	listen, err := net.Listen("tcp", config.Grpc.Address())
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to listen")
+		log.Error().Err(err).Msg("failed to listen")
+		return err
 	}
 
 	s := grpc.NewServer()
@@ -56,7 +57,8 @@ func RunGrpc(config *Config, registrator func(grpc.ServiceRegistrar)) error {
 
 	fmt.Printf("Server listening on %s\n", config.Grpc.Address())
 	if err := s.Serve(listen); err != nil {
-		log.Fatal().Err(err).Msg("failed to serve")
+		log.Error().Err(err).Msg("failed to serve")
+		return err
 	}
 
 	return nil
