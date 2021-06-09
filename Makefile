@@ -102,7 +102,9 @@ swagger/ocp-lesson-api.swagger.json:api/ocp-lesson-api/lesson_service.proto
 		$<
 
 test: $(generated)
-	#go test $(pkgs_with_test)
+	go test $(pkgs_with_test)
+
+ginkgo: $(generated)
 	ginkgo $(pkgs_with_test)
 
 fmt:
@@ -112,7 +114,8 @@ tidy:
 	go mod tidy
 
 clean:
-	rm -rf $(executable) $(filter-out pkg/%,$(generated))
+	#rm -rf $(executable) $(filter-out pkg/%,$(generated))
+	rm -rf $(executable)
 	go clean -cache -testcache $(call trim_right_slash, $(sort $(dir $(go_files))))
 
 prepare:
