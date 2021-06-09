@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/rs/zerolog/log"
@@ -25,10 +26,9 @@ func serveSwagger(swaggerFile string) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func RunHttp(config *Config, registrator func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error) error {
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+func RunHttp(ctx context.Context, config *Config, registrator func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error) error {
+	ch := make(chan struct{})
+	defer close(ch)
 
 	mux := http.NewServeMux()
 	gwmux := runtime.NewServeMux()
@@ -41,18 +41,63 @@ func RunHttp(config *Config, registrator func(context.Context, *runtime.ServeMux
 	mux.HandleFunc("/swagger/", serveSwagger(config.SwaggerFile))
 	mux.Handle("/", gwmux)
 
+	s := http.Server{Addr: config.Http.Address(), Handler: mux}
+
+	shutdown := func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := s.Shutdown(shutdownCtx); err != nil {
+			log.Error().Err(err).Msg("failed to shutdown")
+		}
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ch:
+				shutdown()
+				return
+			case <-ctx.Done():
+				shutdown()
+				return
+			}
+		}
+	}()
+
 	fmt.Printf("Server listening on %s\n", config.Http.Address())
-	return http.ListenAndServe(config.Http.Address(), mux)
+	if err := s.ListenAndServe(); err != nil {
+		log.Error().Err(err).Msg("failed to serve")
+		return err
+	}
+
+	return nil
 }
 
-func RunGrpc(config *Config, registrator func(grpc.ServiceRegistrar)) error {
+func RunGrpc(ctx context.Context, config *Config, registrator func(grpc.ServiceRegistrar)) error {
+	ch := make(chan struct{})
+	defer close(ch)
 	listen, err := net.Listen("tcp", config.Grpc.Address())
+
 	if err != nil {
 		log.Error().Err(err).Msg("failed to listen")
 		return err
 	}
 
 	s := grpc.NewServer()
+
+	go func() {
+		for {
+			select {
+			case <-ch:
+				s.GracefulStop()
+				return
+			case <-ctx.Done():
+				s.GracefulStop()
+				return
+			}
+		}
+	}()
+
 	registrator(s)
 
 	fmt.Printf("Server listening on %s\n", config.Grpc.Address())

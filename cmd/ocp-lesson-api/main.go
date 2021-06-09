@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
 
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
 	"github.com/ozoncp/ocp-course-api/internal/api"
@@ -22,21 +26,25 @@ func main() {
 	fmt.Println("Author: Aleksei Shashev")
 	fmt.Println("Site: https://github.com/ozoncp/ocp-course-api")
 
+	ctxInterrupted, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	g, ctx := errgroup.WithContext(ctxInterrupted)
+
 	flag.Parse()
 
 	config := api.NewConfig(*listenInterface, *grpcPort, *httpPort, *swaggerFile)
 
-	go func() {
-		err := api.RunGrpc(config, func(s grpc.ServiceRegistrar) {
+	g.Go(func() error {
+		return api.RunGrpc(ctx, config, func(s grpc.ServiceRegistrar) {
 			pb.RegisterOcpLessonApiServer(s, api.NewOcpLessonApi())
 		})
-		if err != nil {
-			panic(err)
-		}
-	}()
+	})
 
-	err := api.RunHttp(config, pb.RegisterOcpLessonApiHandlerFromEndpoint)
-	if err != nil {
-		panic(err)
+	g.Go(func() error {
+		return api.RunHttp(ctx, config, pb.RegisterOcpLessonApiHandlerFromEndpoint)
+	})
+
+	if err := g.Wait(); err != nil {
+		fmt.Printf("error occurs: %v\n", err)
 	}
 }
