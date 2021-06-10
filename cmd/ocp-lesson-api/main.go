@@ -11,18 +11,18 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/ozoncp/ocp-course-api/internal/api"
-	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-course-api"
+	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-lesson-api"
 )
 
 var (
 	listenInterface = flag.String("interface", "0.0.0.0", "listening interface")
 	grpcPort        = flag.Int("grpc-port", 7002, "port for gRPC server endpoint")
 	httpPort        = flag.Int("http-port", 7000, "port for HTTP server endpoint")
-	swaggerFile     = flag.String("swagger", "swagger/ocp-course-api.swagger.json", "path to a file with the swagger definitions")
+	swaggerFile     = flag.String("swagger", "swagger/ocp-lesson-api.swagger.json", "path to a file with the swagger definitions")
 )
 
 func main() {
-	fmt.Println("Project: ocp-course-api")
+	fmt.Println("Project: ocp-lesson-api")
 	fmt.Println("Author: Aleksei Shashev")
 	fmt.Println("Site: https://github.com/ozoncp/ocp-course-api")
 
@@ -36,12 +36,12 @@ func main() {
 
 	g.Go(func() error {
 		return api.RunGrpc(ctx, config, func(s grpc.ServiceRegistrar) {
-			pb.RegisterOcpCourseApiServer(s, api.NewOcpCourseApi())
+			pb.RegisterOcpLessonApiServer(s, api.NewOcpLessonApi())
 		})
 	})
 
 	g.Go(func() error {
-		return api.RunHttp(ctx, config, pb.RegisterOcpCourseApiHandlerFromEndpoint)
+		return api.RunHttp(ctx, config, pb.RegisterOcpLessonApiHandlerFromEndpoint)
 	})
 
 	if err := g.Wait(); err != nil {

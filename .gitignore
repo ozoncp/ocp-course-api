@@ -16,10 +16,14 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-gen-*.go
-*.gen.go
-*.mock.go
-/go.sum
+#gen-*.go
+#*.gen.go
+#*.mock.go
+/vendor.protogen
+#/go.sum
 /ocp-course-api
+/ocp-lesson-api
 /utils-demo
 /repeatedly-read
+#/swagger
+.idea/

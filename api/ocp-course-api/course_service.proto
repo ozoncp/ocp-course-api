@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+package ocp.course.api;
+
+option go_package = "github.com/ozoncp/ocp-course-api/api/ocp-course-api;ocp_course_api";
+
+service OcpCourseApi {
+    rpc ListCoursesV1(ListCoursesV1Request) returns (ListCoursesV1Response) {
+        option (google.api.http) = {
+            get: "/v1/courses"
+        };
+    }
+
+    rpc DescribeCourseV1(DescribeCourseV1Request) returns (DescribeCourseV1Response) {
+        option (google.api.http) = {
+            get: "/v1/courses/{course_id}"
+        };
+    }
+
+    rpc CreateCourseV1(CreateCourseV1Request) returns (CreateCourseV1Response) {
+        option (google.api.http) = {
+            post: "/v1/courses"
+            body: "course"
+        };
+    }
+
+    rpc RemoveCourseV1(RemoveCourseV1Request) returns (RemoveCourseV1Response) {
+        option (google.api.http) = {
+            delete: "/v1/courses/{course_id}"
+        };
+    }
+}
+
+message Course {
+    uint64 id = 1 [(validate.rules).uint64.gt = 0];
+    uint64 classroom_id = 2 [(validate.rules).uint64.gt = 0];
+    string name = 3 [(validate.rules).string.min_len = 1];
+    string stream = 4 [(validate.rules).string.min_len = 1];
+}
+
+message ListCoursesV1Request {
+    uint64 limit = 1 [(validate.rules).uint64 = {gt:0, lte:1000}];
+    uint64 offset = 2;
+}
+
+message ListCoursesV1Response {
+    repeated Course courses = 1;
+}
+
+message DescribeCourseV1Request {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DescribeCourseV1Response {
+    Course course = 1;
+}
+
+message CreateCourseV1Request {
+    Course course = 1 [(validate.rules).any.required = true];
+}
+
+message CreateCourseV1Response {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveCourseV1Request {
+    uint64 course_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveCourseV1Response {
+    bool found = 1;
+}
