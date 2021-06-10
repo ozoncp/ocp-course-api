@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -21,7 +20,7 @@ func serveSwagger(swaggerFile string) func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		log.Info().Msgf("Serving %s", r.URL.Path)
+		log.Info().Msgf("Serving %s, return %v", r.URL.Path, swaggerFile)
 		http.ServeFile(w, r, swaggerFile)
 	}
 }
@@ -64,7 +63,7 @@ func RunHttp(ctx context.Context, config *Config, registrator func(context.Conte
 		}
 	}()
 
-	fmt.Printf("Server listening on %s\n", config.Http.Address())
+	log.Info().Msgf("Server listening on %s\n", config.Http.Address())
 	if err := s.ListenAndServe(); err != nil {
 		log.Error().Err(err).Msg("failed to serve")
 		return err
@@ -100,7 +99,7 @@ func RunGrpc(ctx context.Context, config *Config, registrator func(grpc.ServiceR
 
 	registrator(s)
 
-	fmt.Printf("Server listening on %s\n", config.Grpc.Address())
+	log.Info().Msgf("Server listening on %s\n", config.Grpc.Address())
 	if err := s.Serve(listen); err != nil {
 		log.Error().Err(err).Msg("failed to serve")
 		return err

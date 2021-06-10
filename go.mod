@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/cheekybits/genny v1.0.0
+	github.com/go-akka/configuration v0.0.0-20200606091224-a002c0330665
 	github.com/golang/mock v1.5.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/onsi/ginkgo v1.16.4
@@ -14,6 +15,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/goleak v1.1.10
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sys v0.0.0-20210608053332-aa57babbf139 // indirect
 	google.golang.org/genproto v0.0.0-20210607140030-00d4fb20b1ae // indirect
 	google.golang.org/grpc v1.38.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect

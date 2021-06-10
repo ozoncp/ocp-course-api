@@ -2,23 +2,19 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
 
+	"github.com/go-akka/configuration"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
 	"github.com/ozoncp/ocp-course-api/internal/api"
+	uc "github.com/ozoncp/ocp-course-api/internal/utils/config"
 	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-lesson-api"
-)
-
-var (
-	listenInterface = flag.String("interface", "0.0.0.0", "listening interface")
-	grpcPort        = flag.Int("grpc-port", 7002, "port for gRPC server endpoint")
-	httpPort        = flag.Int("http-port", 7000, "port for HTTP server endpoint")
-	swaggerFile     = flag.String("swagger", "swagger/ocp-lesson-api.swagger.json", "path to a file with the swagger definitions")
 )
 
 func main() {
@@ -26,25 +22,39 @@ func main() {
 	fmt.Println("Author: Aleksei Shashev")
 	fmt.Println("Site: https://github.com/ozoncp/ocp-course-api")
 
-	ctxInterrupted, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-	g, ctx := errgroup.WithContext(ctxInterrupted)
+	var defConfig *configuration.Config
+	if cfg, err := uc.LoadDefault(); err != nil {
+		log.Fatal().Err(err).Msg("Couldn't read config")
+	} else {
+		defConfig = cfg
+		log.Info().Msgf("read config:\n%v\n", defConfig)
+	}
 
-	flag.Parse()
+	var serverConfig *api.Config
+	if scfg, err := api.FromHoconConfig(defConfig, "server"); err != nil {
+		log.Fatal().Err(err).Msg("Couldn't extract server config")
+	} else {
+		serverConfig = scfg
+	}
 
-	config := api.NewConfig(*listenInterface, *grpcPort, *httpPort, *swaggerFile)
+	ctxInterrupted, stop1 := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop1()
+
+	ctxTerminated, stop2 := signal.NotifyContext(ctxInterrupted, syscall.SIGTERM)
+	defer stop2()
+	g, ctx := errgroup.WithContext(ctxTerminated)
 
 	g.Go(func() error {
-		return api.RunGrpc(ctx, config, func(s grpc.ServiceRegistrar) {
+		return api.RunGrpc(ctx, serverConfig, func(s grpc.ServiceRegistrar) {
 			pb.RegisterOcpLessonApiServer(s, api.NewOcpLessonApi())
 		})
 	})
 
 	g.Go(func() error {
-		return api.RunHttp(ctx, config, pb.RegisterOcpLessonApiHandlerFromEndpoint)
+		return api.RunHttp(ctx, serverConfig, pb.RegisterOcpLessonApiHandlerFromEndpoint)
 	})
 
 	if err := g.Wait(); err != nil {
-		fmt.Printf("error occurs: %v\n", err)
+		log.Info().Err(err)
 	}
 }

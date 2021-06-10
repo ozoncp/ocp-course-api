@@ -27,6 +27,7 @@ ENV service=${service}
 
 WORKDIR /root/
 COPY --from=builder /root/ocp-course-api/${service} .
+COPY --from=builder /root/ocp-course-api/${service}.conf .
 COPY --from=builder /root/ocp-course-api/swagger/${service}.swagger.json swagger/
 EXPOSE 7000 7002
 CMD ./${service}
