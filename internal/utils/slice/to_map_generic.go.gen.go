@@ -4,7 +4,7 @@
 
 package slice
 
-import "github.com/ozoncp/ocp-course-api/api/model"
+import "github.com/ozoncp/ocp-course-api/internal/api/model"
 
 // Converts the slice xs to map with the type of slice value as a value and the
 // result of op as a key. If the op returns the same result for some values,

@@ -7,7 +7,7 @@ package saver
 import (
 	"sync"
 
-	"github.com/ozoncp/ocp-course-api/api/model"
+	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
 )
 

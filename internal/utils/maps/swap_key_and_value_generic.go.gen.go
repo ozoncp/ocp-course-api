@@ -7,7 +7,7 @@ package maps
 import (
 	"fmt"
 
-	"github.com/ozoncp/ocp-course-api/api/model"
+	"github.com/ozoncp/ocp-course-api/internal/api/model"
 )
 
 func SwapKeyAndValueIntString(xs map[int]string) map[string]int {

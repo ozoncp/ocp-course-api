@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ozoncp/ocp-course-api/api/model"
+	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	slice "github.com/ozoncp/ocp-course-api/internal/utils/slice"
 )
 
@@ -21,11 +21,11 @@ func SplitToBulksLesson(xs []model.Lesson, batchSize int) [][]model.Lesson {
 }
 
 func ToMapCourse(xs []model.Course) map[uint64]model.Course {
-	return slice.ToMapModelCourseUint64(xs, func(c model.Course) uint64 { return c.Id })
+	return slice.ToMapModelCourseUint64(xs, func(c model.Course) uint64 { return c.GetId() })
 }
 
 func ToMapLesson(xs []model.Lesson) map[uint64]model.Lesson {
-	return slice.ToMapModelLessonUint64(xs, func(c model.Lesson) uint64 { return c.Id })
+	return slice.ToMapModelLessonUint64(xs, func(c model.Lesson) uint64 { return c.GetId() })
 }
 
 func RepeatedlyRead(file string, count int) {

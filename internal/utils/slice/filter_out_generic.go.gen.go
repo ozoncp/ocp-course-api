@@ -4,7 +4,7 @@
 
 package slice
 
-import "github.com/ozoncp/ocp-course-api/api/model"
+import "github.com/ozoncp/ocp-course-api/internal/api/model"
 
 func FilterOutInt(xs []int, skip []int) []int {
 	filter := make(map[int]struct{}, len(skip))

@@ -3,10 +3,12 @@ module github.com/ozoncp/ocp-course-api
 go 1.16
 
 require (
+	github.com/Masterminds/squirrel v1.5.0
 	github.com/cheekybits/genny v1.0.0
 	github.com/go-akka/configuration v0.0.0-20200606091224-a002c0330665
 	github.com/golang/mock v1.5.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/jmoiron/sqlx v1.3.4
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.13.0
 	github.com/ozoncp/ocp-course-api/pkg/ocp-course-api v0.0.0-00010101000000-000000000000

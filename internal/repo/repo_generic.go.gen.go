@@ -4,14 +4,20 @@
 
 package repo
 
-import "github.com/ozoncp/ocp-course-api/api/model"
+import "github.com/ozoncp/ocp-course-api/internal/api/model"
 
 type RepoModelCourse interface {
+	DescribeModelCourse(id uint64) (model.Course, error)
+	ListModelCourses(limit uint64, offset uint64) ([]model.Course, error)
 	AddModelCourse(v model.Course) (uint64, error)
 	AddModelCourses(vs []model.Course) error
+	RemoveModelCourse(id uint64) error
 }
 
 type RepoModelLesson interface {
+	DescribeModelLesson(id uint64) (model.Lesson, error)
+	ListModelLessons(limit uint64, offset uint64) ([]model.Lesson, error)
 	AddModelLesson(v model.Lesson) (uint64, error)
 	AddModelLessons(vs []model.Lesson) error
+	RemoveModelLesson(id uint64) error
 }
