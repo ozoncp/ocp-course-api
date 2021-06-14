@@ -7,16 +7,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/go-akka/configuration"
 	_ "github.com/jackc/pgx/stdlib"
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
 	"github.com/ozoncp/ocp-course-api/internal/api"
 	"github.com/ozoncp/ocp-course-api/internal/repo/impl"
+	"github.com/ozoncp/ocp-course-api/internal/utils"
 	uc "github.com/ozoncp/ocp-course-api/internal/utils/config"
 	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-course-api"
 )
@@ -53,22 +52,7 @@ func main() {
 	defer stop2()
 	g, ctx := errgroup.WithContext(ctxTerminated)
 
-	var db *sqlx.DB
-
-	err := backoff.Retry(func() error {
-		var err error
-		db, err = sqlx.Open("pgx", dsn)
-		if err != nil {
-			log.Debug().Err(err).Msg("Attempt to open connection to DB failed")
-			return err
-		}
-		err = db.Ping()
-		if err != nil {
-			log.Debug().Err(err).Msg("Attempt to connect to DB failed")
-		}
-		return err
-	}, backoff.WithContext(backoff.NewExponentialBackOff(), ctx))
-
+	db, err := utils.ConnectToPostgres(ctx, dsn)
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't connect to DB")
 		return
