@@ -19,7 +19,7 @@ COPY . /root/ocp-course-api
 WORKDIR /root/ocp-course-api
 
 #RUN make prepare && make
-RUN make test && make
+RUN make
 
 FROM ubuntu
 ARG service

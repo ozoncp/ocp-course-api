@@ -16,7 +16,7 @@ const (
 
 type repoLesson struct {
 	ctx context.Context
-	db  sqlx.DB
+	db  *sqlx.DB
 }
 
 type rowLesson struct {
@@ -31,7 +31,7 @@ func (r *rowLesson) GetCourseId() uint64 { return r.courseId }
 func (r *rowLesson) GetNumber() uint32   { return r.number }
 func (r *rowLesson) GetName() string     { return r.name }
 
-func NewRepoLesson(ctx context.Context, db sqlx.DB) repo.RepoModelLesson {
+func NewRepoLesson(ctx context.Context, db *sqlx.DB) repo.RepoModelLesson {
 	return &repoLesson{ctx: ctx, db: db}
 }
 
@@ -43,7 +43,12 @@ func (r *repoLesson) DescribeModelLesson(id uint64) (model.Lesson, error) {
 		PlaceholderFormat(sq.Dollar)
 
 	var lesson rowLesson
-	if err := query.QueryRowContext(r.ctx).Scan(&lesson); err != nil {
+	if err := query.QueryRowContext(r.ctx).Scan(
+		&lesson.id,
+		&lesson.courseId,
+		&lesson.number,
+		&lesson.name,
+	); err != nil {
 		return nil, err
 	}
 	return &lesson, nil

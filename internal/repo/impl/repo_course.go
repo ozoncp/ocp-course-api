@@ -16,7 +16,7 @@ const (
 
 type repoCourse struct {
 	ctx context.Context
-	db  sqlx.DB
+	db  *sqlx.DB
 }
 
 type rowCourse struct {
@@ -31,7 +31,7 @@ func (r *rowCourse) GetClassroomId() uint64 { return r.classroomId }
 func (r *rowCourse) GetName() string        { return r.name }
 func (r *rowCourse) GetStream() string      { return r.stream }
 
-func NewRepoCourse(ctx context.Context, db sqlx.DB) repo.RepoModelCourse {
+func NewRepoCourse(ctx context.Context, db *sqlx.DB) repo.RepoModelCourse {
 	return &repoCourse{ctx: ctx, db: db}
 }
 
@@ -43,7 +43,12 @@ func (r *repoCourse) DescribeModelCourse(id uint64) (model.Course, error) {
 		PlaceholderFormat(sq.Dollar)
 
 	var course rowCourse
-	if err := query.QueryRowContext(r.ctx).Scan(&course); err != nil {
+	if err := query.QueryRowContext(r.ctx).Scan(
+		&course.id,
+		&course.classroomId,
+		&course.name,
+		&course.stream,
+	); err != nil {
 		return nil, err
 	}
 	return &course, nil
