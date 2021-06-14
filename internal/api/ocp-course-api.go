@@ -12,6 +12,7 @@ import (
 
 type ocpCourseApiServer struct {
 	repo repo.RepoModelCourse
+	events chan<- model.CourseEvent
 	pb.UnimplementedOcpCourseApiServer
 }
 
@@ -79,6 +80,8 @@ func (s *ocpCourseApiServer) RemoveCourseV1(
 	return &pb.RemoveCourseV1Response{Found: true}, nil
 }
 
-func NewOcpCourseApi(repo repo.RepoModelCourse) pb.OcpCourseApiServer {
-	return &ocpCourseApiServer{repo: repo}
+func NewOcpCourseApi(repo repo.RepoModelCourse,
+	events chan<- model.CourseEvent,
+) pb.OcpCourseApiServer {
+	return &ocpCourseApiServer{repo: repo, events: events}
 }

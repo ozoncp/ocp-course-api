@@ -22,6 +22,7 @@ type OcpCourseApiClient interface {
 	DescribeCourseV1(ctx context.Context, in *DescribeCourseV1Request, opts ...grpc.CallOption) (*DescribeCourseV1Response, error)
 	CreateCourseV1(ctx context.Context, in *CreateCourseV1Request, opts ...grpc.CallOption) (*CreateCourseV1Response, error)
 	RemoveCourseV1(ctx context.Context, in *RemoveCourseV1Request, opts ...grpc.CallOption) (*RemoveCourseV1Response, error)
+	MultiCreateCourseV1(ctx context.Context, in *MultiCreateCourseV1Request, opts ...grpc.CallOption) (*MultiCreateCourseV1Response, error)
 }
 
 type ocpCourseApiClient struct {
@@ -68,6 +69,15 @@ func (c *ocpCourseApiClient) RemoveCourseV1(ctx context.Context, in *RemoveCours
 	return out, nil
 }
 
+func (c *ocpCourseApiClient) MultiCreateCourseV1(ctx context.Context, in *MultiCreateCourseV1Request, opts ...grpc.CallOption) (*MultiCreateCourseV1Response, error) {
+	out := new(MultiCreateCourseV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.course.api.OcpCourseApi/MultiCreateCourseV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OcpCourseApiServer is the server API for OcpCourseApi service.
 // All implementations must embed UnimplementedOcpCourseApiServer
 // for forward compatibility
@@ -76,6 +86,7 @@ type OcpCourseApiServer interface {
 	DescribeCourseV1(context.Context, *DescribeCourseV1Request) (*DescribeCourseV1Response, error)
 	CreateCourseV1(context.Context, *CreateCourseV1Request) (*CreateCourseV1Response, error)
 	RemoveCourseV1(context.Context, *RemoveCourseV1Request) (*RemoveCourseV1Response, error)
+	MultiCreateCourseV1(context.Context, *MultiCreateCourseV1Request) (*MultiCreateCourseV1Response, error)
 	mustEmbedUnimplementedOcpCourseApiServer()
 }
 
@@ -94,6 +105,9 @@ func (UnimplementedOcpCourseApiServer) CreateCourseV1(context.Context, *CreateCo
 }
 func (UnimplementedOcpCourseApiServer) RemoveCourseV1(context.Context, *RemoveCourseV1Request) (*RemoveCourseV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveCourseV1 not implemented")
+}
+func (UnimplementedOcpCourseApiServer) MultiCreateCourseV1(context.Context, *MultiCreateCourseV1Request) (*MultiCreateCourseV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiCreateCourseV1 not implemented")
 }
 func (UnimplementedOcpCourseApiServer) mustEmbedUnimplementedOcpCourseApiServer() {}
 
@@ -180,6 +194,24 @@ func _OcpCourseApi_RemoveCourseV1_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OcpCourseApi_MultiCreateCourseV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultiCreateCourseV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpCourseApiServer).MultiCreateCourseV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.course.api.OcpCourseApi/MultiCreateCourseV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpCourseApiServer).MultiCreateCourseV1(ctx, req.(*MultiCreateCourseV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OcpCourseApi_ServiceDesc is the grpc.ServiceDesc for OcpCourseApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -202,6 +234,10 @@ var OcpCourseApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveCourseV1",
 			Handler:    _OcpCourseApi_RemoveCourseV1_Handler,
+		},
+		{
+			MethodName: "MultiCreateCourseV1",
+			Handler:    _OcpCourseApi_MultiCreateCourseV1_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

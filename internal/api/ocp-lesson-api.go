@@ -12,6 +12,7 @@ import (
 
 type ocpLessonApiServer struct {
 	repo repo.RepoModelLesson
+	events chan<- model.LessonEvent
 	pb.UnimplementedOcpLessonApiServer
 }
 
@@ -78,6 +79,6 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 	return &pb.RemoveLessonV1Response{Found: true}, nil
 }
 
-func NewOcpLessonApi(repo repo.RepoModelLesson) pb.OcpLessonApiServer {
-	return &ocpLessonApiServer{repo: repo}
+func NewOcpLessonApi(repo repo.RepoModelLesson, events chan<- model.LessonEvent) pb.OcpLessonApiServer {
+	return &ocpLessonApiServer{repo: repo, events: events}
 }

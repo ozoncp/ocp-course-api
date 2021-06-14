@@ -32,6 +32,8 @@ service OcpLessonApi {
             delete: "/v1/lessons/{lesson_id}"
         };
     }
+
+    rpc MultiCreateLessonV1(MultiCreateLessonV1Request) returns (MultiCreateLessonV1Response) {}
 }
 
 message Lesson {
@@ -72,4 +74,13 @@ message RemoveLessonV1Request {
 
 message RemoveLessonV1Response {
     bool found = 1;
+}
+
+message MultiCreateCourseV1Request {
+    repeated Course courses = 1 [(validate.rules).repeated.min_items = 1];
+}
+
+message MultiCreateCourseV1Response {
+    repeated Course not_saved = 1;
+    string error = 2;
 }
