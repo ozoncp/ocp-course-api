@@ -44,7 +44,6 @@ message Lesson {
 message ListLessonsV1Request {
     uint64 limit = 1 [(validate.rules).uint64 = {gt:0, lte:1000}];
     uint64 offset = 2;
-    uint64 course_id = 3;
 }
 
 message ListLessonsV1Response {

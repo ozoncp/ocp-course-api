@@ -42,13 +42,6 @@
             "required": false,
             "type": "string",
             "format": "uint64"
-          },
-          {
-            "name": "course_id",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
           }
         ],
         "tags": [

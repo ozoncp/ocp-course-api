@@ -7,12 +7,16 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/go-akka/configuration"
+	_ "github.com/jackc/pgx/stdlib"
+	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
 	"github.com/ozoncp/ocp-course-api/internal/api"
+	"github.com/ozoncp/ocp-course-api/internal/repo/impl"
 	uc "github.com/ozoncp/ocp-course-api/internal/utils/config"
 	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-lesson-api"
 )
@@ -37,6 +41,11 @@ func main() {
 		serverConfig = scfg
 	}
 
+	dsn := defConfig.GetString("database.data-source-name")
+	if len(dsn) == 0 {
+		log.Fatal().Msg("Data Source Name shouldn't be empty")
+	}
+
 	ctxInterrupted, stop1 := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop1()
 
@@ -44,9 +53,32 @@ func main() {
 	defer stop2()
 	g, ctx := errgroup.WithContext(ctxTerminated)
 
+	var db *sqlx.DB
+
+	err := backoff.Retry(func() error {
+		var err error
+		db, err = sqlx.Open("pgx", dsn)
+		if err != nil {
+			log.Warn().Err(err).Msg("Attempt to open connection to DB failed")
+			return err
+		}
+		err = db.Ping()
+		if err != nil {
+			log.Warn().Err(err).Msg("Attempt to connect to DB failed")
+		}
+		return err
+	}, backoff.WithContext(backoff.NewExponentialBackOff(), ctx))
+
+	if err != nil {
+		log.Error().Err(err).Msg("Couldn't connect to DB")
+		return
+	}
+
+	repo := impl.NewRepoLesson(ctx, db)
+
 	g.Go(func() error {
 		return api.RunGrpc(ctx, serverConfig, func(s grpc.ServiceRegistrar) {
-			pb.RegisterOcpLessonApiServer(s, api.NewOcpLessonApi())
+			pb.RegisterOcpLessonApiServer(s, api.NewOcpLessonApi(repo))
 		})
 	})
 
