@@ -12,6 +12,7 @@ type RepoModelCourse interface {
 	AddModelCourse(v model.Course) (uint64, error)
 	AddModelCourses(vs []model.Course) error
 	RemoveModelCourse(id uint64) error
+	UpdateModelCourse(v model.Course) error
 }
 
 type RepoModelLesson interface {
@@ -20,4 +21,5 @@ type RepoModelLesson interface {
 	AddModelLesson(v model.Lesson) (uint64, error)
 	AddModelLessons(vs []model.Lesson) error
 	RemoveModelLesson(id uint64) error
+	UpdateModelLesson(v model.Lesson) error
 }

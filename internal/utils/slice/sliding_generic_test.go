@@ -33,7 +33,7 @@ func TestSlidingTValue(t *testing.T) {
 
 	for _, row := range table {
 		got := make([][]TValue, 0)
-		SlidingTValue(row.src, NewNaturalIntPanic(row.size), NewNaturalIntPanic(row.step), testFunc(&got))
+		SlidingTValue(row.src, MustNaturalInt(row.size), MustNaturalInt(row.step), testFunc(&got))
 		assert.EqualValues(t, row.expect, got,
 			"Parameters src: %v; size: %v; step: %v", row.src, row.size, row.step)
 	}

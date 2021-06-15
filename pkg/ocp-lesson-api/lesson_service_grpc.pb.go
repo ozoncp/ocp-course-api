@@ -22,6 +22,8 @@ type OcpLessonApiClient interface {
 	DescribeLessonV1(ctx context.Context, in *DescribeLessonV1Request, opts ...grpc.CallOption) (*DescribeLessonV1Response, error)
 	CreateLessonV1(ctx context.Context, in *CreateLessonV1Request, opts ...grpc.CallOption) (*CreateLessonV1Response, error)
 	RemoveLessonV1(ctx context.Context, in *RemoveLessonV1Request, opts ...grpc.CallOption) (*RemoveLessonV1Response, error)
+	UpdateLessonV1(ctx context.Context, in *UpdateLessonV1Request, opts ...grpc.CallOption) (*UpdateLessonV1Response, error)
+	MultiCreateLessonV1(ctx context.Context, in *MultiCreateLessonV1Request, opts ...grpc.CallOption) (*MultiCreateLessonV1Response, error)
 }
 
 type ocpLessonApiClient struct {
@@ -68,6 +70,24 @@ func (c *ocpLessonApiClient) RemoveLessonV1(ctx context.Context, in *RemoveLesso
 	return out, nil
 }
 
+func (c *ocpLessonApiClient) UpdateLessonV1(ctx context.Context, in *UpdateLessonV1Request, opts ...grpc.CallOption) (*UpdateLessonV1Response, error) {
+	out := new(UpdateLessonV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.lesson.api.OcpLessonApi/UpdateLessonV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ocpLessonApiClient) MultiCreateLessonV1(ctx context.Context, in *MultiCreateLessonV1Request, opts ...grpc.CallOption) (*MultiCreateLessonV1Response, error) {
+	out := new(MultiCreateLessonV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.lesson.api.OcpLessonApi/MultiCreateLessonV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OcpLessonApiServer is the server API for OcpLessonApi service.
 // All implementations must embed UnimplementedOcpLessonApiServer
 // for forward compatibility
@@ -76,6 +96,8 @@ type OcpLessonApiServer interface {
 	DescribeLessonV1(context.Context, *DescribeLessonV1Request) (*DescribeLessonV1Response, error)
 	CreateLessonV1(context.Context, *CreateLessonV1Request) (*CreateLessonV1Response, error)
 	RemoveLessonV1(context.Context, *RemoveLessonV1Request) (*RemoveLessonV1Response, error)
+	UpdateLessonV1(context.Context, *UpdateLessonV1Request) (*UpdateLessonV1Response, error)
+	MultiCreateLessonV1(context.Context, *MultiCreateLessonV1Request) (*MultiCreateLessonV1Response, error)
 	mustEmbedUnimplementedOcpLessonApiServer()
 }
 
@@ -94,6 +116,12 @@ func (UnimplementedOcpLessonApiServer) CreateLessonV1(context.Context, *CreateLe
 }
 func (UnimplementedOcpLessonApiServer) RemoveLessonV1(context.Context, *RemoveLessonV1Request) (*RemoveLessonV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveLessonV1 not implemented")
+}
+func (UnimplementedOcpLessonApiServer) UpdateLessonV1(context.Context, *UpdateLessonV1Request) (*UpdateLessonV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateLessonV1 not implemented")
+}
+func (UnimplementedOcpLessonApiServer) MultiCreateLessonV1(context.Context, *MultiCreateLessonV1Request) (*MultiCreateLessonV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiCreateLessonV1 not implemented")
 }
 func (UnimplementedOcpLessonApiServer) mustEmbedUnimplementedOcpLessonApiServer() {}
 
@@ -180,6 +208,42 @@ func _OcpLessonApi_RemoveLessonV1_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OcpLessonApi_UpdateLessonV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateLessonV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpLessonApiServer).UpdateLessonV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.lesson.api.OcpLessonApi/UpdateLessonV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpLessonApiServer).UpdateLessonV1(ctx, req.(*UpdateLessonV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OcpLessonApi_MultiCreateLessonV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultiCreateLessonV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpLessonApiServer).MultiCreateLessonV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.lesson.api.OcpLessonApi/MultiCreateLessonV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpLessonApiServer).MultiCreateLessonV1(ctx, req.(*MultiCreateLessonV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OcpLessonApi_ServiceDesc is the grpc.ServiceDesc for OcpLessonApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -202,6 +266,14 @@ var OcpLessonApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveLessonV1",
 			Handler:    _OcpLessonApi_RemoveLessonV1_Handler,
+		},
+		{
+			MethodName: "UpdateLessonV1",
+			Handler:    _OcpLessonApi_UpdateLessonV1_Handler,
+		},
+		{
+			MethodName: "MultiCreateLessonV1",
+			Handler:    _OcpLessonApi_MultiCreateLessonV1_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

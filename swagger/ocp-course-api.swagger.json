@@ -210,6 +210,14 @@
         }
       }
     },
+    "apiUpdateCourseV1Response": {
+      "type": "object",
+      "properties": {
+        "found": {
+          "type": "boolean"
+        }
+      }
+    },
     "protobufAny": {
       "type": "object",
       "properties": {

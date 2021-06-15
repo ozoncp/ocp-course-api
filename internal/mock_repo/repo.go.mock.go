@@ -106,3 +106,17 @@ func (mr *MockRepoTValueMockRecorder) RemoveTValue(id interface{}) *gomock.Call 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTValue", reflect.TypeOf((*MockRepoTValue)(nil).RemoveTValue), id)
 }
+
+// UpdateTValue mocks base method.
+func (m *MockRepoTValue) UpdateTValue(v repo.TValue) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTValue", v)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTValue indicates an expected call of UpdateTValue.
+func (mr *MockRepoTValueMockRecorder) UpdateTValue(v interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTValue", reflect.TypeOf((*MockRepoTValue)(nil).UpdateTValue), v)
+}

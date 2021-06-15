@@ -728,3 +728,324 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = RemoveLessonV1ResponseValidationError{}
+
+// Validate checks the field values on UpdateLessonV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateLessonV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if m.GetLesson() == nil {
+		return UpdateLessonV1RequestValidationError{
+			field:  "Lesson",
+			reason: "value is required",
+		}
+	}
+
+	if a := m.GetLesson(); a != nil {
+
+	}
+
+	return nil
+}
+
+// UpdateLessonV1RequestValidationError is the validation error returned by
+// UpdateLessonV1Request.Validate if the designated constraints aren't met.
+type UpdateLessonV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateLessonV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateLessonV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateLessonV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateLessonV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateLessonV1RequestValidationError) ErrorName() string {
+	return "UpdateLessonV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateLessonV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateLessonV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateLessonV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateLessonV1RequestValidationError{}
+
+// Validate checks the field values on UpdateLessonV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateLessonV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Found
+
+	return nil
+}
+
+// UpdateLessonV1ResponseValidationError is the validation error returned by
+// UpdateLessonV1Response.Validate if the designated constraints aren't met.
+type UpdateLessonV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateLessonV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateLessonV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateLessonV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateLessonV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateLessonV1ResponseValidationError) ErrorName() string {
+	return "UpdateLessonV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateLessonV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateLessonV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateLessonV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateLessonV1ResponseValidationError{}
+
+// Validate checks the field values on MultiCreateLessonV1Request with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateLessonV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if len(m.GetLessons()) < 1 {
+		return MultiCreateLessonV1RequestValidationError{
+			field:  "Lessons",
+			reason: "value must contain at least 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetLessons() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiCreateLessonV1RequestValidationError{
+					field:  fmt.Sprintf("Lessons[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MultiCreateLessonV1RequestValidationError is the validation error returned
+// by MultiCreateLessonV1Request.Validate if the designated constraints aren't met.
+type MultiCreateLessonV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateLessonV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateLessonV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateLessonV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateLessonV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateLessonV1RequestValidationError) ErrorName() string {
+	return "MultiCreateLessonV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateLessonV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateLessonV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateLessonV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateLessonV1RequestValidationError{}
+
+// Validate checks the field values on MultiCreateLessonV1Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateLessonV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetNotSaved() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiCreateLessonV1ResponseValidationError{
+					field:  fmt.Sprintf("NotSaved[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Error
+
+	return nil
+}
+
+// MultiCreateLessonV1ResponseValidationError is the validation error returned
+// by MultiCreateLessonV1Response.Validate if the designated constraints
+// aren't met.
+type MultiCreateLessonV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateLessonV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateLessonV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateLessonV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateLessonV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateLessonV1ResponseValidationError) ErrorName() string {
+	return "MultiCreateLessonV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateLessonV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateLessonV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateLessonV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateLessonV1ResponseValidationError{}

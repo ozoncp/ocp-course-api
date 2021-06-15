@@ -33,6 +33,8 @@ service OcpCourseApi {
         };
     }
 
+    rpc UpdateCourseV1(UpdateCourseV1Request) returns (UpdateCourseV1Response) {}
+
     rpc MultiCreateCourseV1(MultiCreateCourseV1Request) returns (MultiCreateCourseV1Response) {}
 }
 
@@ -73,6 +75,14 @@ message RemoveCourseV1Request {
 }
 
 message RemoveCourseV1Response {
+    bool found = 1;
+}
+
+message UpdateCourseV1Request {
+    Course course = 1 [(validate.rules).any.required = true];
+}
+
+message UpdateCourseV1Response {
     bool found = 1;
 }
 

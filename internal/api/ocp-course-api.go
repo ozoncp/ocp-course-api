@@ -7,12 +7,14 @@ import (
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	"github.com/ozoncp/ocp-course-api/internal/repo"
+	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
 	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-course-api"
 )
 
 type ocpCourseApiServer struct {
-	repo repo.RepoModelCourse
-	events chan<- model.CourseEvent
+	repo      repo.RepoModelCourse
+	events    chan<- model.CourseEvent
+	batchSize commons.NaturalInt
 	pb.UnimplementedOcpCourseApiServer
 }
 
@@ -65,6 +67,10 @@ func (s *ocpCourseApiServer) CreateCourseV1(
 	if err != nil {
 		return nil, err
 	}
+	s.events <- model.CourseEvent{
+		Type: model.CourseCreated,
+		Body: map[string]interface{}{"id": id},
+	}
 	return &pb.CreateCourseV1Response{CourseId: id}, nil
 }
 
@@ -77,11 +83,65 @@ func (s *ocpCourseApiServer) RemoveCourseV1(
 	if err != nil {
 		return &pb.RemoveCourseV1Response{Found: false}, err
 	}
+	s.events <- model.CourseEvent{
+		Type: model.CourseRemoved,
+		Body: map[string]interface{}{"id": req.CourseId},
+	}
 	return &pb.RemoveCourseV1Response{Found: true}, nil
 }
 
-func NewOcpCourseApi(repo repo.RepoModelCourse,
+func (s *ocpCourseApiServer) UpdateCourseV1(
+	ctx context.Context,
+	req *pb.UpdateCourseV1Request,
+) (*pb.UpdateCourseV1Response, error) {
+	err := s.repo.UpdateModelCourse(req.Course)
+	if err != nil {
+		return &pb.UpdateCourseV1Response{Found: false}, err
+	}
+	s.events <- model.CourseEvent{
+		Type: model.CourseUpdated,
+		Body: map[string]interface{}{"id": req.Course.GetId()},
+	}
+	return &pb.UpdateCourseV1Response{Found: true}, nil
+}
+
+func (s *ocpCourseApiServer) MultiCreateCourseV1(
+	ctx context.Context,
+	req *pb.MultiCreateCourseV1Request,
+) (*pb.MultiCreateCourseV1Response, error) {
+	srcLen := len(req.Courses)
+	size := s.batchSize.ToInt()
+	for i := 0; i < srcLen; i += size {
+		end := commons.MinInt(i+size, srcLen)
+		cs := req.Courses[i:end:end]
+		ds := make([]model.Course, 0, size)
+		for _, c := range cs {
+			ds = append(ds, c)
+		}
+		err := s.repo.AddModelCourses(ds)
+		if err != nil {
+			return &pb.MultiCreateCourseV1Response{
+				NotSaved: req.Courses[i:],
+				Error:    err.Error(),
+			}, nil
+		}
+		for _, c := range cs {
+			s.events <- model.CourseEvent{
+				Type: model.CourseCreated,
+				Body: map[string]interface{}{"id": c.GetId()},
+			}
+		}
+		if i+size >= srcLen {
+			break
+		}
+	}
+	return &pb.MultiCreateCourseV1Response{}, nil
+}
+
+func NewOcpCourseApi(
+	repo repo.RepoModelCourse,
 	events chan<- model.CourseEvent,
+	batchSize commons.NaturalInt,
 ) pb.OcpCourseApiServer {
-	return &ocpCourseApiServer{repo: repo, events: events}
+	return &ocpCourseApiServer{repo: repo, events: events, batchSize: batchSize}
 }

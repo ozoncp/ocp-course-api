@@ -189,7 +189,29 @@
         }
       }
     },
+    "apiMultiCreateLessonV1Response": {
+      "type": "object",
+      "properties": {
+        "not_saved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiLesson"
+          }
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
     "apiRemoveLessonV1Response": {
+      "type": "object",
+      "properties": {
+        "found": {
+          "type": "boolean"
+        }
+      }
+    },
+    "apiUpdateLessonV1Response": {
       "type": "object",
       "properties": {
         "found": {

@@ -35,7 +35,7 @@ func TestSaverGenericClose(t *testing.T) {
 		s := NewSaverTValue(
 			mf,
 			ma,
-			commons.NewNaturalIntPanic(1),
+			commons.MustNaturalInt(1),
 			OverflowStrategyDropFirst(),
 		)
 
@@ -61,7 +61,7 @@ func TestSaverGenericFlushByAlarm(t *testing.T) {
 	s := NewSaverTValue(
 		mf,
 		ma,
-		commons.NewNaturalIntPanic(1),
+		commons.MustNaturalInt(1),
 		OverflowStrategyDropFirst(),
 	)
 
@@ -92,7 +92,7 @@ func TestSaverGenericCheckOverflowStrategyDropFirst(t *testing.T) {
 	s := NewSaverTValue(
 		mf,
 		ma,
-		commons.NewNaturalIntPanic(2),
+		commons.MustNaturalInt(2),
 		OverflowStrategyDropFirst(),
 	)
 
@@ -123,7 +123,7 @@ func TestSaverGenericCheckOverflowStrategyDropAll(t *testing.T) {
 	s := NewSaverTValue(
 		mf,
 		ma,
-		commons.NewNaturalIntPanic(2),
+		commons.MustNaturalInt(2),
 		OverflowStrategyDropAll(),
 	)
 
@@ -154,7 +154,7 @@ func TestSaverGenericCheckOverflowStrategyBlock(t *testing.T) {
 	s := NewSaverTValue(
 		mf,
 		ma,
-		commons.NewNaturalIntPanic(2),
+		commons.MustNaturalInt(2),
 		OverflowStrategyBlock(),
 	)
 

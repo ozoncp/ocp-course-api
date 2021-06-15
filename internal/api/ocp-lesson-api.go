@@ -7,12 +7,14 @@ import (
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	"github.com/ozoncp/ocp-course-api/internal/repo"
+	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
 	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-lesson-api"
 )
 
 type ocpLessonApiServer struct {
-	repo repo.RepoModelLesson
-	events chan<- model.LessonEvent
+	repo      repo.RepoModelLesson
+	events    chan<- model.LessonEvent
+	batchSize commons.NaturalInt
 	pb.UnimplementedOcpLessonApiServer
 }
 
@@ -64,6 +66,10 @@ func (s *ocpLessonApiServer) CreateLessonV1(
 	if err != nil {
 		return nil, err
 	}
+	s.events <- model.LessonEvent{
+		Type: model.LessonCreated,
+		Body: map[string]interface{}{"id": id},
+	}
 	return &pb.CreateLessonV1Response{LessonId: id}, nil
 }
 
@@ -76,9 +82,65 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 	if err != nil {
 		return nil, err
 	}
+	s.events <- model.LessonEvent{
+		Type: model.LessonRemoved,
+		Body: map[string]interface{}{"id": req.LessonId},
+	}
 	return &pb.RemoveLessonV1Response{Found: true}, nil
 }
 
-func NewOcpLessonApi(repo repo.RepoModelLesson, events chan<- model.LessonEvent) pb.OcpLessonApiServer {
-	return &ocpLessonApiServer{repo: repo, events: events}
+func (s *ocpLessonApiServer) UpdateLessonV1(
+	ctx context.Context,
+	req *pb.UpdateLessonV1Request,
+) (*pb.UpdateLessonV1Response, error) {
+	err := s.repo.UpdateModelLesson(req.Lesson)
+	if err != nil {
+		return &pb.UpdateLessonV1Response{Found: false}, err
+	}
+	s.events <- model.LessonEvent{
+		Type: model.LessonUpdated,
+		Body: map[string]interface{}{"id": req.Lesson.GetId()},
+	}
+	return &pb.UpdateLessonV1Response{Found: true}, nil
+}
+
+func (s *ocpLessonApiServer) MultiCreateLessonV1(
+	ctx context.Context,
+	req *pb.MultiCreateLessonV1Request,
+) (*pb.MultiCreateLessonV1Response, error) {
+	srcLen := len(req.Lessons)
+	size := s.batchSize.ToInt()
+	for i := 0; i < srcLen; i += size {
+		end := commons.MinInt(i+size, srcLen)
+		ls := req.Lessons[i:end:end]
+		ds := make([]model.Lesson, 0, size)
+		for _, l := range ls {
+			ds = append(ds, l)
+		}
+		err := s.repo.AddModelLessons(ds)
+		if err != nil {
+			return &pb.MultiCreateLessonV1Response{
+				NotSaved: req.Lessons[i:],
+				Error:    err.Error(),
+			}, nil
+		}
+		for _, l := range ls {
+			s.events <- model.LessonEvent{
+				Type: model.LessonCreated,
+				Body: map[string]interface{}{"id": l.GetId()},
+			}
+		}
+		if i+size >= srcLen {
+			break
+		}
+	}
+	return &pb.MultiCreateLessonV1Response{}, nil
+}
+
+func NewOcpLessonApi(
+	repo repo.RepoModelLesson,
+	events chan<- model.LessonEvent,
+	batchSize commons.NaturalInt,
+) pb.OcpLessonApiServer {
+	return &ocpLessonApiServer{repo: repo, events: events, batchSize: batchSize}
 }

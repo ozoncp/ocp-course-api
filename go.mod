@@ -5,7 +5,8 @@ go 1.16
 require (
 	github.com/Masterminds/squirrel v1.5.0
 	github.com/Microsoft/go-winio v0.5.0 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
+	github.com/Shopify/sarama v1.29.0
+	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/cheekybits/genny v1.0.0
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/containerd/continuity v0.1.0 // indirect
@@ -33,7 +34,6 @@ require (
 	golang.org/x/sys v0.0.0-20210611083646-a4fc73990273 // indirect
 	google.golang.org/genproto v0.0.0-20210607140030-00d4fb20b1ae // indirect
 	google.golang.org/grpc v1.38.0
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
 replace github.com/ozoncp/ocp-course-api/pkg/ocp-course-api => ./pkg/ocp-course-api

@@ -30,7 +30,7 @@ var _ = Describe("FlusherGeneric", func() {
 	})
 
 	JustBeforeEach(func() {
-		flusher = NewFlusherTValue(mockRepo, commons.NewNaturalIntPanic(batchSize))
+		flusher = NewFlusherTValue(mockRepo, commons.MustNaturalInt(batchSize))
 	})
 
 	AfterEach(func() {

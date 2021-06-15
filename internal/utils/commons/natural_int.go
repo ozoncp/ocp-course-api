@@ -16,7 +16,7 @@ func (this NaturalInt) ToInt() int {
 	return this.value
 }
 
-func NewNaturalIntPanic(v int) NaturalInt {
+func MustNaturalInt(v int) NaturalInt {
 	res, err := NewNaturalInt(v)
 	if err != nil {
 		panic(err)
