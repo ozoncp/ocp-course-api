@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 
+	"github.com/opentracing/opentracing-go"
+	otl "github.com/opentracing/opentracing-go/log"
 	"github.com/rs/zerolog/log"
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
@@ -32,6 +34,9 @@ func (s *ocpLessonApiServer) ListLessonsV1(
 	ctx context.Context,
 	req *pb.ListLessonsV1Request,
 ) (*pb.ListLessonsV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ListLessonsV1")
+	defer span.Finish()
+
 	log.Info().Msgf("ListLessonsV1Request %v", req)
 	lessons, err := s.repo.ListModelLessons(req.Limit, req.Offset)
 	if err != nil {
@@ -41,6 +46,9 @@ func (s *ocpLessonApiServer) ListLessonsV1(
 	for _, l := range lessons {
 		result = append(result, toPbLesson(l))
 	}
+	span.LogFields(
+		otl.Int("records", len(result)),
+	)
 	return &pb.ListLessonsV1Response{Lessons: result}, nil
 }
 
@@ -48,6 +56,9 @@ func (s *ocpLessonApiServer) DescribeLessonV1(
 	ctx context.Context,
 	req *pb.DescribeLessonV1Request,
 ) (*pb.DescribeLessonV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "DescribeLessonV1")
+	defer span.Finish()
+
 	log.Info().Msgf("DescribeLessonV1Request: %v", req)
 
 	lesson, err := s.repo.DescribeModelLesson(req.LessonId)
@@ -61,6 +72,9 @@ func (s *ocpLessonApiServer) CreateLessonV1(
 	ctx context.Context,
 	req *pb.CreateLessonV1Request,
 ) (*pb.CreateLessonV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "CreateLessonV1")
+	defer span.Finish()
+
 	log.Info().Msgf("CreateLessonV1Request: %v", req)
 	im.IncIncomingRequests("CreateLessonV1")
 
@@ -80,6 +94,9 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 	ctx context.Context,
 	req *pb.RemoveLessonV1Request,
 ) (*pb.RemoveLessonV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RemoveLessonV1")
+	defer span.Finish()
+
 	log.Info().Msgf("RemoveLessonV1Request: %v", req)
 	im.IncIncomingRequests("RemoveLessonV1")
 	err := s.repo.RemoveModelLesson(req.LessonId)
@@ -98,6 +115,9 @@ func (s *ocpLessonApiServer) UpdateLessonV1(
 	ctx context.Context,
 	req *pb.UpdateLessonV1Request,
 ) (*pb.UpdateLessonV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "UpdateLessonV1")
+	defer span.Finish()
+
 	im.IncIncomingRequests("UpdateLessonV1")
 	err := s.repo.UpdateModelLesson(req.Lesson)
 	if err != nil {
@@ -115,18 +135,26 @@ func (s *ocpLessonApiServer) MultiCreateLessonV1(
 	ctx context.Context,
 	req *pb.MultiCreateLessonV1Request,
 ) (*pb.MultiCreateLessonV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MultiCreateLessonV1")
+	defer span.Finish()
+
 	im.IncIncomingRequests("MultiCreateLessonV1")
 	srcLen := len(req.Lessons)
 	size := s.batchSize.ToInt()
 	for i := 0; i < srcLen; i += size {
+		childSpan := opentracing.StartSpan("batch handler", opentracing.ChildOf(span.Context()))
 		end := commons.MinInt(i+size, srcLen)
 		ls := req.Lessons[i:end:end]
+		childSpan.LogFields(
+			otl.Int("records", len(ls)),
+		)
 		ds := make([]model.Lesson, 0, size)
 		for _, l := range ls {
 			ds = append(ds, l)
 		}
 		err := s.repo.AddModelLessons(ds)
 		if err != nil {
+			childSpan.Finish()
 			return &pb.MultiCreateLessonV1Response{
 				NotSaved: req.Lessons[i:],
 				Error:    err.Error(),
@@ -138,6 +166,7 @@ func (s *ocpLessonApiServer) MultiCreateLessonV1(
 				Body: map[string]interface{}{"id": l.GetId()},
 			}
 		}
+		childSpan.Finish()
 		if i+size >= srcLen {
 			break
 		}

@@ -39,7 +39,7 @@ executable = $(notdir $(pkgs_with_cmds))
 
 all: $(executable)
 
-$(executable): $(generated) $(filter-out %_test.go, $(go_files)) go.sum
+$(executable): $(generated) $(filter-out %_test.go, $(go_files))
 	go build $(cmds_dir)$@
 
 internal/flusher/flusher_generic.go.gen.go: internal/utils/slice/sliding_generic.go.gen.go

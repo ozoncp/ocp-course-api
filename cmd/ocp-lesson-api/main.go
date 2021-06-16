@@ -109,6 +109,12 @@ func run() int {
 		return 1
 	}
 
+	err = utils.InitTracing()
+	if err != nil {
+		log.Error().Err(err).Msg("Couldn't initialize tracing")
+		return 1
+	}
+
 	events := make(chan model.LessonEvent, defConfig.GetInt32("kafka.buffer", 16))
 	defer close(events)
 

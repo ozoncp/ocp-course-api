@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/ozoncp/ocp-course-api/internal/utils"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
@@ -40,7 +41,10 @@ func RunHttp(ctx context.Context, config *Config, registrator func(context.Conte
 	mux.HandleFunc("/swagger/", serveSwagger(config.SwaggerFile))
 	mux.Handle("/", gwmux)
 
-	s := http.Server{Addr: config.Http.Address(), Handler: mux}
+	s := http.Server{
+		Addr:    config.Http.Address(),
+		Handler: utils.TracingWrapper(mux),
+	}
 
 	shutdown := func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

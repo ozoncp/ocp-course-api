@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 
+	"github.com/opentracing/opentracing-go"
+	otl "github.com/opentracing/opentracing-go/log"
 	"github.com/rs/zerolog/log"
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
@@ -32,6 +34,8 @@ func (s *ocpCourseApiServer) ListCoursesV1(
 	ctx context.Context,
 	req *pb.ListCoursesV1Request,
 ) (*pb.ListCoursesV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ListCoursesV1")
+	defer span.Finish()
 
 	log.Info().Msgf("ListCoursesV1Request %v", req)
 	courses, err := s.repo.ListModelCourses(req.Limit, req.Offset)
@@ -42,6 +46,9 @@ func (s *ocpCourseApiServer) ListCoursesV1(
 	for _, c := range courses {
 		result = append(result, toPbCourse(c))
 	}
+	span.LogFields(
+		otl.Int("records", len(result)),
+	)
 	return &pb.ListCoursesV1Response{Courses: result}, nil
 }
 
@@ -49,6 +56,9 @@ func (s *ocpCourseApiServer) DescribeCourseV1(
 	ctx context.Context,
 	req *pb.DescribeCourseV1Request,
 ) (*pb.DescribeCourseV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "DescribeCourseV1")
+	defer span.Finish()
+
 	log.Info().Msgf("DescribeCourseV1Request: %v", req)
 
 	course, err := s.repo.DescribeModelCourse(req.CourseId)
@@ -62,6 +72,9 @@ func (s *ocpCourseApiServer) CreateCourseV1(
 	ctx context.Context,
 	req *pb.CreateCourseV1Request,
 ) (*pb.CreateCourseV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "CreateCourseV1")
+	defer span.Finish()
+
 	log.Info().Msgf("CreateCourseV1Request: %v", req)
 	im.IncIncomingRequests("CreateCourseV1")
 
@@ -81,6 +94,9 @@ func (s *ocpCourseApiServer) RemoveCourseV1(
 	ctx context.Context,
 	req *pb.RemoveCourseV1Request,
 ) (*pb.RemoveCourseV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RemoveCourseV1")
+	defer span.Finish()
+
 	log.Info().Msgf("RemoveCourseV1Request: %v", req)
 	im.IncIncomingRequests("RemoveCourseV1")
 	err := s.repo.RemoveModelCourse(req.CourseId)
@@ -99,6 +115,9 @@ func (s *ocpCourseApiServer) UpdateCourseV1(
 	ctx context.Context,
 	req *pb.UpdateCourseV1Request,
 ) (*pb.UpdateCourseV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "UpdateCourseV1")
+	defer span.Finish()
+
 	im.IncIncomingRequests("UpdateCourseV1")
 	err := s.repo.UpdateModelCourse(req.Course)
 	if err != nil {
@@ -116,18 +135,26 @@ func (s *ocpCourseApiServer) MultiCreateCourseV1(
 	ctx context.Context,
 	req *pb.MultiCreateCourseV1Request,
 ) (*pb.MultiCreateCourseV1Response, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MultiCreateCourseV1")
+	defer span.Finish()
+
 	im.IncIncomingRequests("MultiCreateCourseV1")
 	srcLen := len(req.Courses)
 	size := s.batchSize.ToInt()
 	for i := 0; i < srcLen; i += size {
+		childSpan := opentracing.StartSpan("batch handler", opentracing.ChildOf(span.Context()))
 		end := commons.MinInt(i+size, srcLen)
 		cs := req.Courses[i:end:end]
+		childSpan.LogFields(
+			otl.Int("records", len(cs)),
+		)
 		ds := make([]model.Course, 0, size)
 		for _, c := range cs {
 			ds = append(ds, c)
 		}
 		err := s.repo.AddModelCourses(ds)
 		if err != nil {
+			childSpan.Finish()
 			return &pb.MultiCreateCourseV1Response{
 				NotSaved: req.Courses[i:],
 				Error:    err.Error(),
@@ -139,6 +166,7 @@ func (s *ocpCourseApiServer) MultiCreateCourseV1(
 				Body: map[string]interface{}{"id": c.GetId()},
 			}
 		}
+		childSpan.Finish()
 		if i+size >= srcLen {
 			break
 		}

@@ -46,6 +46,13 @@ services:
       - "./prometheus.yml:/etc/prometheus/prometheus.yml"
         #- /tmp/ocp-course-api-prometheus-data:/prometheus
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+      - "14268:14268"
+
   ocp-course-api:
     image: ocp-course-api:dev
     ports:
@@ -53,7 +60,9 @@ services:
       - "17002:7002"
       - "19100:9100"
     environment:
-      KAFKA_BROKERS: "[\"kafka-1:9094\"]"
+      KAFKA_BROKERS: "[kafka-1:9094]"
+      JAEGER_AGENT_HOST: "jaeger"
+      JAEGER_AGENT_PORT: 6831
 
   ocp-lesson-api:
     image: ocp-lesson-api:dev
@@ -62,7 +71,9 @@ services:
       - "27002:7002"
       - "29100:9100"
     environment:
-      KAFKA_BROKERS: "[\"kafka-1:9094\"]"
+      KAFKA_BROKERS: "[kafka-1:9094]"
+      JAEGER_AGENT_HOST: "jaeger"
+      JAEGER_AGENT_PORT: 6831
 
 networks:
   default:
