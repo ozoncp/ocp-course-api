@@ -38,11 +38,20 @@ services:
     depends_on:
       - zoo
 
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+        #- /tmp/ocp-course-api-prometheus-data:/prometheus
+
   ocp-course-api:
     image: ocp-course-api:dev
     ports:
       - "17000:7000"
       - "17002:7002"
+      - "19100:9100"
     environment:
       KAFKA_BROKERS: "[\"kafka-1:9094\"]"
 
@@ -51,6 +60,7 @@ services:
     ports:
       - "27000:7000"
       - "27002:7002"
+      - "29100:9100"
     environment:
       KAFKA_BROKERS: "[\"kafka-1:9094\"]"
 

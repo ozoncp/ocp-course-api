@@ -24,6 +24,7 @@ require (
 	github.com/ory/dockertest/v3 v3.6.5
 	github.com/ozoncp/ocp-course-api/pkg/ocp-course-api v0.0.0-00010101000000-000000000000
 	github.com/ozoncp/ocp-course-api/pkg/ocp-lesson-api v0.0.0-00010101000000-000000000000
+	github.com/prometheus/client_golang v0.9.3
 	github.com/rs/zerolog v1.22.0
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect

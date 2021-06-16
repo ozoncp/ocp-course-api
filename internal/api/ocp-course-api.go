@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
+	im "github.com/ozoncp/ocp-course-api/internal/metrics"
 	"github.com/ozoncp/ocp-course-api/internal/repo"
 	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
 	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-course-api"
@@ -62,6 +63,7 @@ func (s *ocpCourseApiServer) CreateCourseV1(
 	req *pb.CreateCourseV1Request,
 ) (*pb.CreateCourseV1Response, error) {
 	log.Info().Msgf("CreateCourseV1Request: %v", req)
+	im.IncIncomingRequests("CreateCourseV1")
 
 	id, err := s.repo.AddModelCourse(req.Course)
 	if err != nil {
@@ -71,6 +73,7 @@ func (s *ocpCourseApiServer) CreateCourseV1(
 		Type: model.CourseCreated,
 		Body: map[string]interface{}{"id": id},
 	}
+	im.IncIncomingRequestsSuccess("CreateCourseV1")
 	return &pb.CreateCourseV1Response{CourseId: id}, nil
 }
 
@@ -79,6 +82,7 @@ func (s *ocpCourseApiServer) RemoveCourseV1(
 	req *pb.RemoveCourseV1Request,
 ) (*pb.RemoveCourseV1Response, error) {
 	log.Info().Msgf("RemoveCourseV1Request: %v", req)
+	im.IncIncomingRequests("RemoveCourseV1")
 	err := s.repo.RemoveModelCourse(req.CourseId)
 	if err != nil {
 		return &pb.RemoveCourseV1Response{Found: false}, err
@@ -87,6 +91,7 @@ func (s *ocpCourseApiServer) RemoveCourseV1(
 		Type: model.CourseRemoved,
 		Body: map[string]interface{}{"id": req.CourseId},
 	}
+	im.IncIncomingRequestsSuccess("RemoveCourseV1")
 	return &pb.RemoveCourseV1Response{Found: true}, nil
 }
 
@@ -94,6 +99,7 @@ func (s *ocpCourseApiServer) UpdateCourseV1(
 	ctx context.Context,
 	req *pb.UpdateCourseV1Request,
 ) (*pb.UpdateCourseV1Response, error) {
+	im.IncIncomingRequests("UpdateCourseV1")
 	err := s.repo.UpdateModelCourse(req.Course)
 	if err != nil {
 		return &pb.UpdateCourseV1Response{Found: false}, err
@@ -102,6 +108,7 @@ func (s *ocpCourseApiServer) UpdateCourseV1(
 		Type: model.CourseUpdated,
 		Body: map[string]interface{}{"id": req.Course.GetId()},
 	}
+	im.IncIncomingRequestsSuccess("UpdateCourseV1")
 	return &pb.UpdateCourseV1Response{Found: true}, nil
 }
 
@@ -109,6 +116,7 @@ func (s *ocpCourseApiServer) MultiCreateCourseV1(
 	ctx context.Context,
 	req *pb.MultiCreateCourseV1Request,
 ) (*pb.MultiCreateCourseV1Response, error) {
+	im.IncIncomingRequests("MultiCreateCourseV1")
 	srcLen := len(req.Courses)
 	size := s.batchSize.ToInt()
 	for i := 0; i < srcLen; i += size {
@@ -135,6 +143,7 @@ func (s *ocpCourseApiServer) MultiCreateCourseV1(
 			break
 		}
 	}
+	im.IncIncomingRequestsSuccess("MultiCreateCourseV1")
 	return &pb.MultiCreateCourseV1Response{}, nil
 }
 

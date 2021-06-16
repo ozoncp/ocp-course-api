@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
+	im "github.com/ozoncp/ocp-course-api/internal/metrics"
 	"github.com/ozoncp/ocp-course-api/internal/repo"
 	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
 	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-lesson-api"
@@ -61,6 +62,7 @@ func (s *ocpLessonApiServer) CreateLessonV1(
 	req *pb.CreateLessonV1Request,
 ) (*pb.CreateLessonV1Response, error) {
 	log.Info().Msgf("CreateLessonV1Request: %v", req)
+	im.IncIncomingRequests("CreateLessonV1")
 
 	id, err := s.repo.AddModelLesson(req.Lesson)
 	if err != nil {
@@ -70,6 +72,7 @@ func (s *ocpLessonApiServer) CreateLessonV1(
 		Type: model.LessonCreated,
 		Body: map[string]interface{}{"id": id},
 	}
+	im.IncIncomingRequestsSuccess("CreateLessonV1")
 	return &pb.CreateLessonV1Response{LessonId: id}, nil
 }
 
@@ -78,6 +81,7 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 	req *pb.RemoveLessonV1Request,
 ) (*pb.RemoveLessonV1Response, error) {
 	log.Info().Msgf("RemoveLessonV1Request: %v", req)
+	im.IncIncomingRequests("RemoveLessonV1")
 	err := s.repo.RemoveModelLesson(req.LessonId)
 	if err != nil {
 		return nil, err
@@ -86,6 +90,7 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 		Type: model.LessonRemoved,
 		Body: map[string]interface{}{"id": req.LessonId},
 	}
+	im.IncIncomingRequestsSuccess("RemoveLessonV1")
 	return &pb.RemoveLessonV1Response{Found: true}, nil
 }
 
@@ -93,6 +98,7 @@ func (s *ocpLessonApiServer) UpdateLessonV1(
 	ctx context.Context,
 	req *pb.UpdateLessonV1Request,
 ) (*pb.UpdateLessonV1Response, error) {
+	im.IncIncomingRequests("UpdateLessonV1")
 	err := s.repo.UpdateModelLesson(req.Lesson)
 	if err != nil {
 		return &pb.UpdateLessonV1Response{Found: false}, err
@@ -101,6 +107,7 @@ func (s *ocpLessonApiServer) UpdateLessonV1(
 		Type: model.LessonUpdated,
 		Body: map[string]interface{}{"id": req.Lesson.GetId()},
 	}
+	im.IncIncomingRequestsSuccess("UpdateLessonV1")
 	return &pb.UpdateLessonV1Response{Found: true}, nil
 }
 
@@ -108,6 +115,7 @@ func (s *ocpLessonApiServer) MultiCreateLessonV1(
 	ctx context.Context,
 	req *pb.MultiCreateLessonV1Request,
 ) (*pb.MultiCreateLessonV1Response, error) {
+	im.IncIncomingRequests("MultiCreateLessonV1")
 	srcLen := len(req.Lessons)
 	size := s.batchSize.ToInt()
 	for i := 0; i < srcLen; i += size {
@@ -134,6 +142,7 @@ func (s *ocpLessonApiServer) MultiCreateLessonV1(
 			break
 		}
 	}
+	im.IncIncomingRequestsSuccess("MultiCreateLessonV1")
 	return &pb.MultiCreateLessonV1Response{}, nil
 }
 

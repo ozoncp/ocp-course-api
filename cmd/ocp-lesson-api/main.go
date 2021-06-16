@@ -16,6 +16,7 @@ import (
 	"github.com/ozoncp/ocp-course-api/internal/api"
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	"github.com/ozoncp/ocp-course-api/internal/event_producer"
+	im "github.com/ozoncp/ocp-course-api/internal/metrics"
 	"github.com/ozoncp/ocp-course-api/internal/repo/impl"
 	"github.com/ozoncp/ocp-course-api/internal/utils"
 	"github.com/ozoncp/ocp-course-api/internal/utils/commons"
@@ -112,6 +113,10 @@ func run() int {
 	defer close(events)
 
 	g.Go(func() error { return eventsReader(ctx, events, eventProducer) })
+
+	g.Go(func() error {
+		return im.RunMetricsServer(ctx)
+	})
 
 	g.Go(func() error {
 		return api.RunGrpc(ctx, serverConfig, func(s grpc.ServiceRegistrar) {

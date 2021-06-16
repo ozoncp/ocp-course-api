@@ -63,7 +63,7 @@ func RunHttp(ctx context.Context, config *Config, registrator func(context.Conte
 		}
 	}()
 
-	log.Info().Msgf("Server listening on %s\n", config.Http.Address())
+	log.Info().Msgf("Server listening on %s", config.Http.Address())
 	if err := s.ListenAndServe(); err != nil {
 		log.Error().Err(err).Msg("failed to serve")
 		return err
@@ -99,7 +99,7 @@ func RunGrpc(ctx context.Context, config *Config, registrator func(grpc.ServiceR
 
 	registrator(s)
 
-	log.Info().Msgf("Server listening on %s\n", config.Grpc.Address())
+	log.Info().Msgf("Server listening on %s", config.Grpc.Address())
 	if err := s.Serve(listen); err != nil {
 		log.Error().Err(err).Msg("failed to serve")
 		return err
