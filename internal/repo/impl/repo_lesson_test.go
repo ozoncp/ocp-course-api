@@ -2,6 +2,7 @@ package impl_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,6 +46,11 @@ func TestRepoLessonAddAndDescripbe(t *testing.T) {
 
 	_, err = repo.DescribeModelLesson(d.GetId())
 	assert.NotNil(t, err)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
+
+	err = repo.RemoveModelLesson(d.GetId())
+	assert.NotNil(t, err)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 }
 
 func TestRepoLessonMulipleAddAndList(t *testing.T) {

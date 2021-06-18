@@ -2,10 +2,14 @@ package api
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/opentracing/opentracing-go"
 	otl "github.com/opentracing/opentracing-go/log"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	im "github.com/ozoncp/ocp-course-api/internal/metrics"
@@ -41,15 +45,20 @@ func (s *ocpCourseApiServer) ListCoursesV1(
 	log.Info().Msgf("ListCoursesV1Request %v", req)
 	courses, err := s.repo.ListModelCourses(req.Limit, req.Offset)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			span.SetTag("result", "NotFound")
+			return &pb.ListCoursesV1Response{Courses: nil}, nil
+		}
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
 		return nil, err
 	}
 	result := make([]*pb.Course, 0, len(courses))
 	for _, c := range courses {
 		result = append(result, toPbCourse(c))
 	}
-	span.LogFields(
-		otl.Int("records", len(result)),
-	)
+	span.SetTag("result", "OK")
+	span.LogFields(otl.Int("records", len(result)))
 	return &pb.ListCoursesV1Response{Courses: result}, nil
 }
 
@@ -59,13 +68,24 @@ func (s *ocpCourseApiServer) DescribeCourseV1(
 ) (*pb.DescribeCourseV1Response, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "DescribeCourseV1")
 	defer span.Finish()
+	span.LogFields(otl.Uint64("id", req.CourseId))
 
 	log.Info().Msgf("DescribeCourseV1Request: %v", req)
 
 	course, err := s.repo.DescribeModelCourse(req.CourseId)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			span.SetTag("result", "NotFound")
+			span.LogFields(otl.Uint64("id", req.CourseId))
+			return nil,
+				status.Errorf(codes.NotFound,
+					"Course with ID %v wasn't found.", req.CourseId)
+		}
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
 		return nil, err
 	}
+	span.SetTag("result", "OK")
 	return &pb.DescribeCourseV1Response{Course: toPbCourse(course)}, nil
 }
 
@@ -81,6 +101,8 @@ func (s *ocpCourseApiServer) CreateCourseV1(
 
 	id, err := s.repo.AddModelCourse(req.Course)
 	if err != nil {
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
 		return nil, err
 	}
 	s.events <- model.CourseEvent{
@@ -88,6 +110,7 @@ func (s *ocpCourseApiServer) CreateCourseV1(
 		Body: map[string]interface{}{"id": id},
 	}
 	im.IncIncomingRequestsSuccess("CreateCourseV1")
+	span.SetTag("result", "OK")
 	return &pb.CreateCourseV1Response{CourseId: id}, nil
 }
 
@@ -97,18 +120,26 @@ func (s *ocpCourseApiServer) RemoveCourseV1(
 ) (*pb.RemoveCourseV1Response, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "RemoveCourseV1")
 	defer span.Finish()
+	span.LogFields(otl.Uint64("id", req.CourseId))
 
 	log.Info().Msgf("RemoveCourseV1Request: %v", req)
 	im.IncIncomingRequests("RemoveCourseV1")
 	err := s.repo.RemoveModelCourse(req.CourseId)
 	if err != nil {
-		return &pb.RemoveCourseV1Response{Found: false}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			span.SetTag("result", "NotFound")
+			return &pb.RemoveCourseV1Response{Found: false}, nil
+		}
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
+		return nil, err
 	}
 	s.events <- model.CourseEvent{
 		Type: model.CourseRemoved,
 		Body: map[string]interface{}{"id": req.CourseId},
 	}
 	im.IncIncomingRequestsSuccess("RemoveCourseV1")
+	span.SetTag("result", "OK")
 	return &pb.RemoveCourseV1Response{Found: true}, nil
 }
 
@@ -118,17 +149,25 @@ func (s *ocpCourseApiServer) UpdateCourseV1(
 ) (*pb.UpdateCourseV1Response, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UpdateCourseV1")
 	defer span.Finish()
+	span.LogFields(otl.Uint64("id", req.Course.Id))
 
 	im.IncIncomingRequests("UpdateCourseV1")
 	err := s.repo.UpdateModelCourse(req.Course)
 	if err != nil {
-		return &pb.UpdateCourseV1Response{Found: false}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			span.SetTag("result", "NotFound")
+			return &pb.UpdateCourseV1Response{Found: false}, nil
+		}
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
+		return nil, err
 	}
 	s.events <- model.CourseEvent{
 		Type: model.CourseUpdated,
 		Body: map[string]interface{}{"id": req.Course.GetId()},
 	}
 	im.IncIncomingRequestsSuccess("UpdateCourseV1")
+	span.SetTag("result", "OK")
 	return &pb.UpdateCourseV1Response{Found: true}, nil
 }
 
@@ -146,16 +185,18 @@ func (s *ocpCourseApiServer) MultiCreateCourseV1(
 		childSpan := opentracing.StartSpan("batch handler", opentracing.ChildOf(span.Context()))
 		end := commons.MinInt(i+size, srcLen)
 		cs := req.Courses[i:end:end]
-		childSpan.LogFields(
-			otl.Int("records", len(cs)),
-		)
+		childSpan.LogFields(otl.Int("records", len(cs)))
 		ds := make([]model.Course, 0, size)
 		for _, c := range cs {
 			ds = append(ds, c)
 		}
 		err := s.repo.AddModelCourses(ds)
 		if err != nil {
+			childSpan.SetTag("result", "Fail")
+			childSpan.LogFields(otl.String("error", err.Error()))
 			childSpan.Finish()
+			span.SetTag("result", "Fail")
+			span.LogFields(otl.String("error", err.Error()))
 			return &pb.MultiCreateCourseV1Response{
 				NotSaved: req.Courses[i:],
 				Error:    err.Error(),
@@ -167,12 +208,14 @@ func (s *ocpCourseApiServer) MultiCreateCourseV1(
 				Body: map[string]interface{}{"id": c.GetId()},
 			}
 		}
+		childSpan.SetTag("result", "OK")
 		childSpan.Finish()
 		if i+size >= srcLen {
 			break
 		}
 	}
 	im.IncIncomingRequestsSuccess("MultiCreateCourseV1")
+	span.SetTag("result", "OK")
 	return &pb.MultiCreateCourseV1Response{}, nil
 }
 

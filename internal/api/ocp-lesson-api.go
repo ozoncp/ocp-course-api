@@ -2,10 +2,14 @@ package api
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/opentracing/opentracing-go"
 	otl "github.com/opentracing/opentracing-go/log"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	im "github.com/ozoncp/ocp-course-api/internal/metrics"
@@ -41,15 +45,20 @@ func (s *ocpLessonApiServer) ListLessonsV1(
 	log.Info().Msgf("ListLessonsV1Request %v", req)
 	lessons, err := s.repo.ListModelLessons(req.Limit, req.Offset)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			span.SetTag("result", "NotFound")
+			return &pb.ListLessonsV1Response{Lessons: nil}, nil
+		}
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
 		return nil, err
 	}
 	result := make([]*pb.Lesson, 0, len(lessons))
 	for _, l := range lessons {
 		result = append(result, toPbLesson(l))
 	}
-	span.LogFields(
-		otl.Int("records", len(result)),
-	)
+	span.SetTag("result", "OK")
+	span.LogFields(otl.Int("records", len(result)))
 	return &pb.ListLessonsV1Response{Lessons: result}, nil
 }
 
@@ -59,13 +68,23 @@ func (s *ocpLessonApiServer) DescribeLessonV1(
 ) (*pb.DescribeLessonV1Response, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "DescribeLessonV1")
 	defer span.Finish()
+	span.LogFields(otl.Uint64("id", req.LessonId))
 
 	log.Info().Msgf("DescribeLessonV1Request: %v", req)
 
 	lesson, err := s.repo.DescribeModelLesson(req.LessonId)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			span.SetTag("result", "NotFound")
+			return nil,
+				status.Errorf(codes.NotFound,
+					"Lesson with ID %v wasn't found.", req.LessonId)
+		}
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
 		return nil, err
 	}
+	span.SetTag("result", "OK")
 	return &pb.DescribeLessonV1Response{Lesson: toPbLesson(lesson)}, nil
 }
 
@@ -81,6 +100,8 @@ func (s *ocpLessonApiServer) CreateLessonV1(
 
 	id, err := s.repo.AddModelLesson(req.Lesson)
 	if err != nil {
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
 		return nil, err
 	}
 	s.events <- model.LessonEvent{
@@ -88,6 +109,7 @@ func (s *ocpLessonApiServer) CreateLessonV1(
 		Body: map[string]interface{}{"id": id},
 	}
 	im.IncIncomingRequestsSuccess("CreateLessonV1")
+	span.SetTag("result", "OK")
 	return &pb.CreateLessonV1Response{LessonId: id}, nil
 }
 
@@ -97,11 +119,18 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 ) (*pb.RemoveLessonV1Response, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "RemoveLessonV1")
 	defer span.Finish()
+	span.LogFields(otl.Uint64("id", req.LessonId))
 
 	log.Info().Msgf("RemoveLessonV1Request: %v", req)
 	im.IncIncomingRequests("RemoveLessonV1")
 	err := s.repo.RemoveModelLesson(req.LessonId)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			span.SetTag("result", "NotFound")
+			return &pb.RemoveLessonV1Response{Found: false}, nil
+		}
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
 		return nil, err
 	}
 	s.events <- model.LessonEvent{
@@ -109,6 +138,7 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 		Body: map[string]interface{}{"id": req.LessonId},
 	}
 	im.IncIncomingRequestsSuccess("RemoveLessonV1")
+	span.SetTag("result", "OK")
 	return &pb.RemoveLessonV1Response{Found: true}, nil
 }
 
@@ -118,17 +148,25 @@ func (s *ocpLessonApiServer) UpdateLessonV1(
 ) (*pb.UpdateLessonV1Response, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UpdateLessonV1")
 	defer span.Finish()
+	span.LogFields(otl.Uint64("id", req.Lesson.Id))
 
 	im.IncIncomingRequests("UpdateLessonV1")
 	err := s.repo.UpdateModelLesson(req.Lesson)
 	if err != nil {
-		return &pb.UpdateLessonV1Response{Found: false}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			span.SetTag("result", "NotFound")
+			return &pb.UpdateLessonV1Response{Found: false}, nil
+		}
+		span.SetTag("result", "Fail")
+		span.LogFields(otl.String("error", err.Error()))
+		return nil, err
 	}
 	s.events <- model.LessonEvent{
 		Type: model.LessonUpdated,
 		Body: map[string]interface{}{"id": req.Lesson.GetId()},
 	}
 	im.IncIncomingRequestsSuccess("UpdateLessonV1")
+	span.SetTag("result", "OK")
 	return &pb.UpdateLessonV1Response{Found: true}, nil
 }
 
@@ -155,7 +193,11 @@ func (s *ocpLessonApiServer) MultiCreateLessonV1(
 		}
 		err := s.repo.AddModelLessons(ds)
 		if err != nil {
+			childSpan.SetTag("result", "Fail")
+			childSpan.LogFields(otl.String("error", err.Error()))
 			childSpan.Finish()
+			span.SetTag("result", "Fail")
+			span.LogFields(otl.String("error", err.Error()))
 			return &pb.MultiCreateLessonV1Response{
 				NotSaved: req.Lessons[i:],
 				Error:    err.Error(),
@@ -167,11 +209,13 @@ func (s *ocpLessonApiServer) MultiCreateLessonV1(
 				Body: map[string]interface{}{"id": l.GetId()},
 			}
 		}
+		childSpan.SetTag("result", "OK")
 		childSpan.Finish()
 		if i+size >= srcLen {
 			break
 		}
 	}
+	span.SetTag("result", "OK")
 	im.IncIncomingRequestsSuccess("MultiCreateLessonV1")
 	return &pb.MultiCreateLessonV1Response{}, nil
 }

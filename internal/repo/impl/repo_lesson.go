@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -116,7 +117,10 @@ func (r *repoLesson) RemoveModelLesson(id uint64) error {
 		RunWith(r.db).
 		PlaceholderFormat(sq.Dollar)
 
-	_, err := query.ExecContext(r.ctx)
+	result, err := query.ExecContext(r.ctx)
+	if count, err := result.RowsAffected(); err == nil && count == 0 {
+		return sql.ErrNoRows
+	}
 	return err
 }
 

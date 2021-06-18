@@ -28,14 +28,14 @@ func eventsReader(
 	ctx context.Context,
 	events <-chan model.LessonEvent,
 	p event_producer.LessonEventProducer,
-) error {
+) {
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return
 		case evt, ok := <-events:
 			if !ok {
-				return nil
+				return
 			}
 			err := p.SendEvent(&evt)
 			if err != nil {
@@ -118,7 +118,10 @@ func run() int {
 	events := make(chan model.LessonEvent, defConfig.GetInt32("kafka.buffer"))
 	defer close(events)
 
-	g.Go(func() error { return eventsReader(ctx, events, eventProducer) })
+	g.Go(func() error {
+		eventsReader(ctx, events, eventProducer)
+		return nil
+	})
 
 	g.Go(func() error {
 		return im.RunMetricsServer(ctx, metricsConfig)
