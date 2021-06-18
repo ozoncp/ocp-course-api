@@ -64,6 +64,6 @@ func main() {
 	})
 
 	if err := g.Wait(); err != nil {
-		log.Info().Err(err)
+		log.Error().Err(err)
 	}
 }
