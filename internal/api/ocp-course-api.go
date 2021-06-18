@@ -2,10 +2,14 @@ package api
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/opentracing/opentracing-go"
 	otl "github.com/opentracing/opentracing-go/log"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	im "github.com/ozoncp/ocp-course-api/internal/metrics"
@@ -64,6 +68,11 @@ func (s *ocpCourseApiServer) DescribeCourseV1(
 
 	course, err := s.repo.DescribeModelCourse(req.CourseId)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil,
+				status.Errorf(codes.NotFound,
+					"Course with ID %v wasn't found.", req.CourseId)
+		}
 		return nil, err
 	}
 	return &pb.DescribeCourseV1Response{Course: toPbCourse(course)}, nil
@@ -102,7 +111,10 @@ func (s *ocpCourseApiServer) RemoveCourseV1(
 	im.IncIncomingRequests("RemoveCourseV1")
 	err := s.repo.RemoveModelCourse(req.CourseId)
 	if err != nil {
-		return &pb.RemoveCourseV1Response{Found: false}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return &pb.RemoveCourseV1Response{Found: false}, nil
+		}
+		return nil, err
 	}
 	s.events <- model.CourseEvent{
 		Type: model.CourseRemoved,
@@ -122,7 +134,10 @@ func (s *ocpCourseApiServer) UpdateCourseV1(
 	im.IncIncomingRequests("UpdateCourseV1")
 	err := s.repo.UpdateModelCourse(req.Course)
 	if err != nil {
-		return &pb.UpdateCourseV1Response{Found: false}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return &pb.UpdateCourseV1Response{Found: false}, nil
+		}
+		return nil, err
 	}
 	s.events <- model.CourseEvent{
 		Type: model.CourseUpdated,

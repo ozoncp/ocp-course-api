@@ -2,10 +2,14 @@ package api
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/opentracing/opentracing-go"
 	otl "github.com/opentracing/opentracing-go/log"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	im "github.com/ozoncp/ocp-course-api/internal/metrics"
@@ -64,6 +68,11 @@ func (s *ocpLessonApiServer) DescribeLessonV1(
 
 	lesson, err := s.repo.DescribeModelLesson(req.LessonId)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil,
+				status.Errorf(codes.NotFound,
+					"Lesson with ID %v wasn't found.", req.LessonId)
+		}
 		return nil, err
 	}
 	return &pb.DescribeLessonV1Response{Lesson: toPbLesson(lesson)}, nil
@@ -102,6 +111,9 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 	im.IncIncomingRequests("RemoveLessonV1")
 	err := s.repo.RemoveModelLesson(req.LessonId)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &pb.RemoveLessonV1Response{Found: false}, nil
+		}
 		return nil, err
 	}
 	s.events <- model.LessonEvent{
@@ -122,7 +134,10 @@ func (s *ocpLessonApiServer) UpdateLessonV1(
 	im.IncIncomingRequests("UpdateLessonV1")
 	err := s.repo.UpdateModelLesson(req.Lesson)
 	if err != nil {
-		return &pb.UpdateLessonV1Response{Found: false}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return &pb.UpdateLessonV1Response{Found: false}, nil
+		}
+		return nil, err
 	}
 	s.events <- model.LessonEvent{
 		Type: model.LessonUpdated,
