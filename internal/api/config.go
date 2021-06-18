@@ -2,63 +2,24 @@ package api
 
 import (
 	"fmt"
-	"net"
 	"os"
 
 	"github.com/go-akka/configuration"
 
+	"github.com/ozoncp/ocp-course-api/internal"
 	uc "github.com/ozoncp/ocp-course-api/internal/utils/config"
 )
 
-type ListenConfig struct {
-	Interface string
-	Port      int
-}
-
-func (c *ListenConfig) Validate() error {
-
-	errs := make([]string, 0, 2)
-
-	if net.ParseIP(c.Interface) == nil {
-		errs = append(errs,
-			fmt.Sprintf("the Interface value is invalid, %v is bad IP", c.Interface))
-	}
-
-	if p := c.Port; p < 1 || p > 65535 {
-		errs = append(errs,
-			fmt.Sprintf("the Port value is invalid, %v is bad", p))
-	}
-
-	err := ""
-	for _, e := range errs {
-		if len(err) > 0 {
-			err = err + "; " + e
-		} else {
-			err = e
-		}
-	}
-
-	if len(err) > 0 {
-		return fmt.Errorf(err)
-	}
-
-	return nil
-}
-
-func (this *ListenConfig) Address() string {
-	return fmt.Sprintf("%v:%v", this.Interface, this.Port)
-}
-
 type Config struct {
-	Grpc        ListenConfig
-	Http        ListenConfig
+	Grpc        internal.ListenConfig
+	Http        internal.ListenConfig
 	SwaggerFile string
 }
 
 func NewConfig(listenInterface string, grpcPort int, httpPort int, swagger string) *Config {
 	return &Config{
-		Grpc:        ListenConfig{listenInterface, grpcPort},
-		Http:        ListenConfig{listenInterface, httpPort},
+		Grpc:        internal.ListenConfig{Interface: listenInterface, Port: grpcPort},
+		Http:        internal.ListenConfig{Interface: listenInterface, Port: httpPort},
 		SwaggerFile: swagger,
 	}
 }
@@ -118,7 +79,7 @@ func FromHoconConfig(cfg *configuration.Config, path string) (config *Config, er
 		}
 	}()
 
-	if len(path) > 0 {
+	if path != "" {
 		if cfg, err := uc.GetConfig(cfg, path); err != nil {
 			return nil, err
 		} else {
@@ -126,17 +87,10 @@ func FromHoconConfig(cfg *configuration.Config, path string) (config *Config, er
 		}
 	}
 
-	var (
-		listenInterface string
-		grpcPort        int
-		httpPort        int
-		swaggerFile     string
-	)
-
-	listenInterface = cfg.GetString("interface")
-	grpcPort = int(cfg.GetInt32("grpc-port"))
-	httpPort = int(cfg.GetInt32("http-port"))
-	swaggerFile = cfg.GetString("swagger-file")
+	listenInterface := cfg.GetString("interface")
+	grpcPort := int(cfg.GetInt32("grpc-port"))
+	httpPort := int(cfg.GetInt32("http-port"))
+	swaggerFile := cfg.GetString("swagger-file")
 
 	config = NewConfig(listenInterface, grpcPort, httpPort, swaggerFile)
 

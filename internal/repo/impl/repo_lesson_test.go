@@ -71,3 +71,21 @@ func TestRepoLessonMulipleAddAndList(t *testing.T) {
 	LessonEqual(t, ds[3], got2[0])
 	LessonEqual(t, ds[4], got2[1])
 }
+
+func TestRepoLessonUpdate(t *testing.T) {
+	repo := PrepareTestLesson(t)
+	d1 := &ocp_lesson_api.Lesson{
+		Id: 1, CourseId: 1, Number: 1, Name: "intro"}
+	d2 := &ocp_lesson_api.Lesson{
+		Id: d1.GetId(), CourseId: 2, Number: 5, Name: "welcome"}
+
+	_, err := repo.AddModelLesson(d1)
+	assert.Nil(t, err)
+
+	err = repo.UpdateModelLesson(d2)
+	assert.Nil(t, err)
+
+	got, err := repo.DescribeModelLesson(d1.GetId())
+	assert.Nil(t, err)
+	LessonEqual(t, d2, got)
+}

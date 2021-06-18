@@ -14,4 +14,5 @@ type RepoTValue interface {
 	AddTValue(v TValue) (uint64, error)
 	AddTValues(vs []TValue) error
 	RemoveTValue(id uint64) error
+	UpdateTValue(v TValue) error
 }

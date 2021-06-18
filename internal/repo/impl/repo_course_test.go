@@ -71,3 +71,21 @@ func TestRepoCourseMulipleAddAndList(t *testing.T) {
 	CourseEqual(t, ds[3], got2[0])
 	CourseEqual(t, ds[4], got2[1])
 }
+
+func TestRepoCourseUpdate(t *testing.T) {
+	repo := PrepareTestCourse(t)
+	d1 := &ocp_course_api.Course{
+		Id: 1, ClassroomId: 1, Name: "cpp2go", Stream: "spring'21"}
+	d2 := &ocp_course_api.Course{
+		Id: d1.GetId(), ClassroomId: 2, Name: "C++ to Go", Stream: "Summer'21"}
+
+	_, err := repo.AddModelCourse(d1)
+	assert.Nil(t, err)
+
+	err = repo.UpdateModelCourse(d2)
+	assert.Nil(t, err)
+
+	got, err := repo.DescribeModelCourse(d1.GetId())
+	assert.Nil(t, err)
+	CourseEqual(t, d2, got)
+}

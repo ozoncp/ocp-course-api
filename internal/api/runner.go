@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/ozoncp/ocp-course-api/internal/utils"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
@@ -40,7 +41,10 @@ func RunHttp(ctx context.Context, config *Config, registrator func(context.Conte
 	mux.HandleFunc("/swagger/", serveSwagger(config.SwaggerFile))
 	mux.Handle("/", gwmux)
 
-	s := http.Server{Addr: config.Http.Address(), Handler: mux}
+	s := http.Server{
+		Addr:    config.Http.Address(),
+		Handler: utils.TracingWrapper(mux),
+	}
 
 	shutdown := func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -63,7 +67,7 @@ func RunHttp(ctx context.Context, config *Config, registrator func(context.Conte
 		}
 	}()
 
-	log.Info().Msgf("Server listening on %s\n", config.Http.Address())
+	log.Info().Msgf("Server listening on %s", config.Http.Address())
 	if err := s.ListenAndServe(); err != nil {
 		log.Error().Err(err).Msg("failed to serve")
 		return err
@@ -99,7 +103,7 @@ func RunGrpc(ctx context.Context, config *Config, registrator func(grpc.ServiceR
 
 	registrator(s)
 
-	log.Info().Msgf("Server listening on %s\n", config.Grpc.Address())
+	log.Info().Msgf("Server listening on %s", config.Grpc.Address())
 	if err := s.Serve(listen); err != nil {
 		log.Error().Err(err).Msg("failed to serve")
 		return err

@@ -119,3 +119,17 @@ func (r *repoLesson) RemoveModelLesson(id uint64) error {
 	_, err := query.ExecContext(r.ctx)
 	return err
 }
+
+func (r *repoLesson) UpdateModelLesson(v model.Lesson) error {
+	query := sq.Update(lessonTableName).
+		Set("course_id", v.GetCourseId()).
+		Set("number", v.GetNumber()).
+		Set("name", v.GetName()).
+		RunWith(r.db).
+		PlaceholderFormat(sq.Dollar)
+
+	if _, err := query.ExecContext(r.ctx); err != nil {
+		return err
+	}
+	return nil
+}

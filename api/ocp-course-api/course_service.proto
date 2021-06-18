@@ -32,6 +32,10 @@ service OcpCourseApi {
             delete: "/v1/courses/{course_id}"
         };
     }
+
+    rpc UpdateCourseV1(UpdateCourseV1Request) returns (UpdateCourseV1Response) {}
+
+    rpc MultiCreateCourseV1(MultiCreateCourseV1Request) returns (MultiCreateCourseV1Response) {}
 }
 
 message Course {
@@ -72,4 +76,21 @@ message RemoveCourseV1Request {
 
 message RemoveCourseV1Response {
     bool found = 1;
+}
+
+message UpdateCourseV1Request {
+    Course course = 1 [(validate.rules).any.required = true];
+}
+
+message UpdateCourseV1Response {
+    bool found = 1;
+}
+
+message MultiCreateCourseV1Request {
+    repeated Course courses = 1 [(validate.rules).repeated.min_items = 1];
+}
+
+message MultiCreateCourseV1Response {
+    repeated Course not_saved = 1;
+    string error = 2;
 }

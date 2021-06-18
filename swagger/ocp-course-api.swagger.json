@@ -188,7 +188,29 @@
         }
       }
     },
+    "apiMultiCreateCourseV1Response": {
+      "type": "object",
+      "properties": {
+        "not_saved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiCourse"
+          }
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
     "apiRemoveCourseV1Response": {
+      "type": "object",
+      "properties": {
+        "found": {
+          "type": "boolean"
+        }
+      }
+    },
+    "apiUpdateCourseV1Response": {
       "type": "object",
       "properties": {
         "found": {
