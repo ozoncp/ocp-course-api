@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-akka/configuration"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -55,25 +54,21 @@ func run() int {
 	fmt.Println("Author: Aleksei Shashev")
 	fmt.Println("Site: https://github.com/ozoncp/ocp-course-api")
 
-	var defConfig *configuration.Config
-	if cfg, err := uc.LoadDefault(); err != nil {
+	defConfig, err := uc.LoadDefault()
+	if err != nil {
 		log.Error().Err(err).Msg("Couldn't read config")
 		return 1
-	} else {
-		defConfig = cfg
-		log.Info().Msgf("read config:\n%v\n", defConfig)
 	}
+	log.Info().Msgf("read config:\n%v\n", defConfig)
 
-	var serverConfig *api.Config
-	if scfg, err := api.FromHoconConfig(defConfig, "server"); err != nil {
+	serverConfig, err := api.FromHoconConfig(defConfig, "server")
+	if err != nil {
 		log.Error().Err(err).Msg("Couldn't extract server config")
 		return 1
-	} else {
-		serverConfig = scfg
 	}
 
 	dsn := defConfig.GetString("database.data-source-name")
-	if len(dsn) == 0 {
+	if dsn == "" {
 		log.Error().Msg("Data Source Name shouldn't be empty")
 		return 1
 	}
@@ -84,11 +79,9 @@ func run() int {
 		return 1
 	}
 
-	ctxInterrupted, stop1 := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop1()
-
-	ctxTerminated, stop2 := signal.NotifyContext(ctxInterrupted, syscall.SIGTERM)
-	defer stop2()
+	ctxTerminated, stop := signal.NotifyContext(context.Background(),
+		os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	g, ctx := errgroup.WithContext(ctxTerminated)
 
 	db, err := utils.ConnectToPostgres(ctx, dsn)
@@ -136,7 +129,7 @@ func run() int {
 	})
 
 	if err := g.Wait(); err != nil {
-		fmt.Printf("error occurs: %v\n", err)
+		log.Error().Err(err)
 	}
 
 	return 0

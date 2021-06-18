@@ -15,10 +15,11 @@ import (
 )
 
 type ocpLessonApiServer struct {
-	repo      repo.RepoModelLesson
+	pb.UnimplementedOcpLessonApiServer
+
+	repo repo.RepoModelLesson
 	events    chan<- model.LessonEvent
 	batchSize commons.NaturalInt
-	pb.UnimplementedOcpLessonApiServer
 }
 
 func toPbLesson(l model.Lesson) *pb.Lesson {

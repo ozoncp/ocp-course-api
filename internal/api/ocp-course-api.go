@@ -15,10 +15,11 @@ import (
 )
 
 type ocpCourseApiServer struct {
-	repo      repo.RepoModelCourse
+	pb.UnimplementedOcpCourseApiServer
+
+	repo repo.RepoModelCourse
 	events    chan<- model.CourseEvent
 	batchSize commons.NaturalInt
-	pb.UnimplementedOcpCourseApiServer
 }
 
 func toPbCourse(c model.Course) *pb.Course {
