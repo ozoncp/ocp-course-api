@@ -8,6 +8,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
+
+	"github.com/ozoncp/ocp-course-api/internal"
 )
 
 var incomingRequests = prometheus.NewCounterVec(
@@ -41,10 +43,10 @@ func IncIncomingRequests(operation string) {
 }
 
 func IncIncomingRequestsSuccess(operation string) {
-	incomingRequests.With(prometheus.Labels{"operation": operation}).Inc()
+	incomingRequestsSuccess.With(prometheus.Labels{"operation": operation}).Inc()
 }
 
-func RunMetricsServer(ctx context.Context) error {
+func RunMetricsServer(ctx context.Context, config *internal.ListenConfig) error {
 	ch := make(chan struct{})
 	defer close(ch)
 
@@ -56,7 +58,7 @@ func RunMetricsServer(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 
-	s := http.Server{Addr: "0.0.0.0:9100", Handler: mux}
+	s := http.Server{Addr: config.Address(), Handler: mux}
 
 	shutdown := func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -79,7 +81,7 @@ func RunMetricsServer(ctx context.Context) error {
 		}
 	}()
 
-	log.Info().Msg("Metrcis server listening on 0.0.0.0:9100")
+	log.Info().Msgf("Metrcis server listening on %s", config.Address())
 	if err := s.ListenAndServe(); err != nil {
 		log.Error().Err(err).Msg("Failed to start metrics server")
 		return err

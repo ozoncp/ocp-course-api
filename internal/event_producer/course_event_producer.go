@@ -30,9 +30,6 @@ func (p *courseEventProducer) prepareMessage(evt *model.CourseEvent) (*sarama.Pr
 		Topic: p.topic,
 		Value: sarama.StringEncoder(string(encoded)),
 	}
-	log.Debug().Msgf("event: %v", evt)
-	log.Debug().Msgf("encoded: %v", string(encoded))
-	log.Debug().Msgf("message: %v", msg)
 	return msg, nil
 }
 

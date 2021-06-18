@@ -12,6 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
+	"github.com/ozoncp/ocp-course-api/internal"
 	"github.com/ozoncp/ocp-course-api/internal/api"
 	"github.com/ozoncp/ocp-course-api/internal/api/model"
 	"github.com/ozoncp/ocp-course-api/internal/event_producer"
@@ -78,6 +79,12 @@ func run() int {
 		return 1
 	}
 
+	metricsConfig, err := internal.FromHoconListenConfig(defConfig, "metrics")
+	if err != nil {
+		log.Error().Err(err).Msg("Couldn't extract metrics config")
+		return 1
+	}
+
 	ctxTerminated, stop := signal.NotifyContext(context.Background(),
 		os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -108,13 +115,13 @@ func run() int {
 		return 1
 	}
 
-	events := make(chan model.LessonEvent, defConfig.GetInt32("kafka.buffer", 16))
+	events := make(chan model.LessonEvent, defConfig.GetInt32("kafka.buffer"))
 	defer close(events)
 
 	g.Go(func() error { return eventsReader(ctx, events, eventProducer) })
 
 	g.Go(func() error {
-		return im.RunMetricsServer(ctx)
+		return im.RunMetricsServer(ctx, metricsConfig)
 	})
 
 	g.Go(func() error {

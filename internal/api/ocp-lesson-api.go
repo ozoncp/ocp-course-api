@@ -17,7 +17,7 @@ import (
 type ocpLessonApiServer struct {
 	pb.UnimplementedOcpLessonApiServer
 
-	repo repo.RepoModelLesson
+	repo      repo.RepoModelLesson
 	events    chan<- model.LessonEvent
 	batchSize commons.NaturalInt
 }
