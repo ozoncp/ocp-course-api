@@ -142,8 +142,6 @@ func (m *ListLessonsV1Request) Validate() error {
 
 	// no validation rules for Offset
 
-	// no validation rules for CourseId
-
 	return nil
 }
 

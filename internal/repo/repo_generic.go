@@ -9,6 +9,9 @@ import (
 type TValue = generic.Type
 
 type RepoTValue interface {
+	DescribeTValue(id uint64) (TValue, error)
+	ListTValues(limit uint64, offset uint64) ([]TValue, error)
 	AddTValue(v TValue) (uint64, error)
 	AddTValues(vs []TValue) error
+	RemoveTValue(id uint64) error
 }

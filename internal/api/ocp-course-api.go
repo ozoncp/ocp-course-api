@@ -4,84 +4,82 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
+	"github.com/ozoncp/ocp-course-api/internal/api/model"
+	"github.com/ozoncp/ocp-course-api/internal/repo"
 	pb "github.com/ozoncp/ocp-course-api/pkg/ocp-course-api"
-)
-
-var (
-	c1 = pb.Course{
-		Id:          1,
-		ClassroomId: 1,
-		Name:        "Ozon C++ to Go",
-		Stream:      "Spring'21",
-	}
-
-	c2 = pb.Course{
-		Id:          2,
-		ClassroomId: 1,
-		Name:        "Ozon every language to Go",
-		Stream:      "Summer'21",
-	}
 )
 
 type ocpCourseApiServer struct {
 	pb.UnimplementedOcpCourseApiServer
+
+	repo repo.RepoModelCourse
 }
 
-func (*ocpCourseApiServer) ListCoursesV1(
+func toPbCourse(c model.Course) *pb.Course {
+	return &pb.Course{
+		Id:          c.GetId(),
+		ClassroomId: c.GetClassroomId(),
+		Name:        c.GetName(),
+		Stream:      c.GetStream(),
+	}
+}
+
+func (s *ocpCourseApiServer) ListCoursesV1(
 	ctx context.Context,
 	req *pb.ListCoursesV1Request,
 ) (*pb.ListCoursesV1Response, error) {
 
 	log.Info().Msgf("ListCoursesV1Request %v", req)
-	return &pb.ListCoursesV1Response{Courses: []*pb.Course{&c1, &c2}}, nil
+	courses, err := s.repo.ListModelCourses(req.Limit, req.Offset)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*pb.Course, 0, len(courses))
+	for _, c := range courses {
+		result = append(result, toPbCourse(c))
+	}
+	return &pb.ListCoursesV1Response{Courses: result}, nil
 }
 
-func (*ocpCourseApiServer) DescribeCourseV1(
+func (s *ocpCourseApiServer) DescribeCourseV1(
 	ctx context.Context,
 	req *pb.DescribeCourseV1Request,
 ) (*pb.DescribeCourseV1Response, error) {
 	log.Info().Msgf("DescribeCourseV1Request: %v", req)
 
-	switch req.GetCourseId() {
-	case c1.Id:
-		return &pb.DescribeCourseV1Response{Course: &c1}, nil
-	case c2.Id:
-		return &pb.DescribeCourseV1Response{Course: &c2}, nil
+	course, err := s.repo.DescribeModelCourse(req.CourseId)
+	if err != nil {
+		return nil, err
 	}
-
-	return nil,
-		status.Errorf(
-			codes.NotFound,
-			"Course with id %v doesn't exist", req.GetCourseId())
+	return &pb.DescribeCourseV1Response{Course: toPbCourse(course)}, nil
 }
 
-func (*ocpCourseApiServer) CreateCourseV1(
+func (s *ocpCourseApiServer) CreateCourseV1(
 	ctx context.Context,
 	req *pb.CreateCourseV1Request,
 ) (*pb.CreateCourseV1Response, error) {
 	log.Info().Msgf("CreateCourseV1Request: %v", req)
 
-	if err := req.GetCourse().Validate(); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Wrong request: %v", err)
+	id, err := s.repo.AddModelCourse(req.Course)
+	if err != nil {
+		return nil, err
 	}
-
-	if req.GetCourse().Id == c1.Id || req.GetCourse().Id == c2.Id {
-		return nil, status.Errorf(codes.AlreadyExists, codes.Unimplemented.String())
-	}
-	return &pb.CreateCourseV1Response{CourseId: req.GetCourse().Id}, nil
+	return &pb.CreateCourseV1Response{CourseId: id}, nil
 }
 
-func (*ocpCourseApiServer) RemoveCourseV1(
+func (s *ocpCourseApiServer) RemoveCourseV1(
 	ctx context.Context,
 	req *pb.RemoveCourseV1Request,
 ) (*pb.RemoveCourseV1Response, error) {
 	log.Info().Msgf("RemoveCourseV1Request: %v", req)
-	return nil, status.Errorf(codes.Unimplemented, codes.Unimplemented.String())
+	err := s.repo.RemoveModelCourse(req.CourseId)
+	if err != nil {
+		return &pb.RemoveCourseV1Response{Found: false}, err
+	}
+	return &pb.RemoveCourseV1Response{Found: true}, nil
 }
 
-func NewOcpCourseApi() pb.OcpCourseApiServer {
-	return &ocpCourseApiServer{}
+func NewOcpCourseApi(repo repo.RepoModelCourse) pb.OcpCourseApiServer {
+	return &ocpCourseApiServer{repo: repo}
 }
