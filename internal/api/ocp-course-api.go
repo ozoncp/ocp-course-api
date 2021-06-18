@@ -11,8 +11,9 @@ import (
 )
 
 type ocpCourseApiServer struct {
-	repo repo.RepoModelCourse
 	pb.UnimplementedOcpCourseApiServer
+
+	repo repo.RepoModelCourse
 }
 
 func toPbCourse(c model.Course) *pb.Course {

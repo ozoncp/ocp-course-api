@@ -141,8 +141,7 @@ func FromHoconConfig(cfg *configuration.Config, path string) (config *Config, er
 	config = NewConfig(listenInterface, grpcPort, httpPort, swaggerFile)
 
 	if err = config.Validate(); err != nil {
-		config = nil
-		return
+		return nil, err
 	}
 
 	return config, nil
