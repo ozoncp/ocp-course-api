@@ -42,14 +42,10 @@ all: $(executable)
 $(executable): $(generated) $(filter-out %_test.go, $(go_files)) go.sum
 	go build $(cmds_dir)$@
 
-internal/flusher/flusher_generic.go.gen.go: internal/utils/slice/sliding_generic.go.gen.go
-
 go.sum: go.mod
 	$(run-prepare)
 
 internal/mock_repo/repo.go.mock.go: internal/repo/repo_generic.go
-internal/mock_flusher/flusher.go.mock.go: internal/flusher/flusher_generic.go
-internal/mock_saver/flush_alarm.go.mock.go: internal/saver/flush_alarm.go
 
 pkg/ocp-course-api/course_service.pb.go: api/ocp-course-api/course_service.proto
 pkg/ocp-course-api/course_service.pb.validate.go: api/ocp-course-api/course_service.proto
