@@ -50,9 +50,13 @@ func (this *ListenConfig) Address() string {
 
 func FromHoconListenConfig(cfg *configuration.Config, path string) (config *ListenConfig, err error) {
 	defer func() {
-		if errIn := recover(); errIn != nil {
+		if exception := recover(); exception != nil {
 			config = nil
-			err = fmt.Errorf("reading config failed: %w", errIn)
+			if errIn, ok := exception.(error); ok {
+				err = fmt.Errorf("reading config failed: %w", errIn)
+			} else {
+				err = fmt.Errorf("reading config failed: %v", exception)
+			}
 		}
 	}()
 

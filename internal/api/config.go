@@ -73,9 +73,13 @@ func (c *Config) Validate() error {
 
 func FromHoconConfig(cfg *configuration.Config, path string) (config *Config, err error) {
 	defer func() {
-		if errIn := recover(); errIn != nil {
+		if exception := recover(); exception != nil {
 			config = nil
-			err = fmt.Errorf("reading config failed: %w", errIn)
+			if errIn, ok := exception.(error); ok {
+				err = fmt.Errorf("reading config failed: %w", errIn)
+			} else {
+				err = fmt.Errorf("reading config failed: %v", exception)
+			}
 		}
 	}()
 
