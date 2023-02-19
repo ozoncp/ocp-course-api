@@ -16,9 +16,13 @@ var (
 
 func LoadFromFile(path string) (cfg *configuration.Config, err error) {
 	defer func() {
-		if errIn := recover(); errIn != nil {
+		if exception := recover(); exception != nil {
 			cfg = nil
-			err = fmt.Errorf("loading config '%v' failed: %w", path, errIn)
+			if errIn, ok := exception.(error); ok {
+				err = fmt.Errorf("loading config '%v' failed: %w", path, errIn)
+			} else {
+				err = fmt.Errorf("loading config '%v' failed: %v", path, exception)
+			}
 		}
 	}()
 
@@ -40,9 +44,13 @@ func LoadFromFile(path string) (cfg *configuration.Config, err error) {
 
 func GetConfig(c *configuration.Config, path string) (cfg *configuration.Config, err error) {
 	defer func() {
-		if errIn := recover(); errIn != nil {
+		if exception := recover(); exception != nil {
 			cfg = nil
-			err = fmt.Errorf("getting config failed: %w", errIn)
+			if errIn, ok := exception.(error); ok {
+				err = fmt.Errorf("getting config failed: %w", errIn)
+			} else {
+				err = fmt.Errorf("getting config failed: %v", exception)
+			}
 		}
 	}()
 
