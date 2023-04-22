@@ -11,6 +11,7 @@ import (
 	"github.com/ozoncp/ocp-course-api/internal/utils"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func serveSwagger(swaggerFile string) func(http.ResponseWriter, *http.Request) {
@@ -32,7 +33,7 @@ func RunHttp(ctx context.Context, config *Config, registrator func(context.Conte
 
 	mux := http.NewServeMux()
 	gwmux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure()}
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	err := registrator(ctx, gwmux, config.Grpc.Address(), opts)
 	if err != nil {
 		return err
