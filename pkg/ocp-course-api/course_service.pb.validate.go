@@ -11,6 +11,7 @@ import (
 	"net/mail"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -31,45 +32,96 @@ var (
 	_ = (*url.URL)(nil)
 	_ = (*mail.Address)(nil)
 	_ = anypb.Any{}
+	_ = sort.Sort
 )
 
 // Validate checks the field values on Course with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *Course) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Course with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in CourseMultiError, or nil if none found.
+func (m *Course) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Course) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if m.GetId() <= 0 {
-		return CourseValidationError{
+		err := CourseValidationError{
 			field:  "Id",
 			reason: "value must be greater than 0",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if m.GetClassroomId() <= 0 {
-		return CourseValidationError{
+		err := CourseValidationError{
 			field:  "ClassroomId",
 			reason: "value must be greater than 0",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if utf8.RuneCountInString(m.GetName()) < 1 {
-		return CourseValidationError{
+		err := CourseValidationError{
 			field:  "Name",
 			reason: "value length must be at least 1 runes",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if utf8.RuneCountInString(m.GetStream()) < 1 {
-		return CourseValidationError{
+		err := CourseValidationError{
 			field:  "Stream",
 			reason: "value length must be at least 1 runes",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CourseMultiError(errors)
 	}
 
 	return nil
 }
+
+// CourseMultiError is an error wrapping multiple validation errors returned by
+// Course.ValidateAll() if the designated constraints aren't met.
+type CourseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CourseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CourseMultiError) AllErrors() []error { return m }
 
 // CourseValidationError is the validation error returned by Course.Validate if
 // the designated constraints aren't met.
@@ -127,23 +179,62 @@ var _ interface {
 
 // Validate checks the field values on ListCoursesV1Request with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *ListCoursesV1Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCoursesV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCoursesV1RequestMultiError, or nil if none found.
+func (m *ListCoursesV1Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCoursesV1Request) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if val := m.GetLimit(); val <= 0 || val > 1000 {
-		return ListCoursesV1RequestValidationError{
+		err := ListCoursesV1RequestValidationError{
 			field:  "Limit",
 			reason: "value must be inside range (0, 1000]",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Offset
 
+	if len(errors) > 0 {
+		return ListCoursesV1RequestMultiError(errors)
+	}
+
 	return nil
 }
+
+// ListCoursesV1RequestMultiError is an error wrapping multiple validation
+// errors returned by ListCoursesV1Request.ValidateAll() if the designated
+// constraints aren't met.
+type ListCoursesV1RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCoursesV1RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCoursesV1RequestMultiError) AllErrors() []error { return m }
 
 // ListCoursesV1RequestValidationError is the validation error returned by
 // ListCoursesV1Request.Validate if the designated constraints aren't met.
@@ -203,16 +294,49 @@ var _ interface {
 
 // Validate checks the field values on ListCoursesV1Response with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *ListCoursesV1Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCoursesV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCoursesV1ResponseMultiError, or nil if none found.
+func (m *ListCoursesV1Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCoursesV1Response) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	for idx, item := range m.GetCourses() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListCoursesV1ResponseValidationError{
+						field:  fmt.Sprintf("Courses[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListCoursesV1ResponseValidationError{
+						field:  fmt.Sprintf("Courses[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ListCoursesV1ResponseValidationError{
 					field:  fmt.Sprintf("Courses[%v]", idx),
@@ -224,8 +348,29 @@ func (m *ListCoursesV1Response) Validate() error {
 
 	}
 
+	if len(errors) > 0 {
+		return ListCoursesV1ResponseMultiError(errors)
+	}
+
 	return nil
 }
+
+// ListCoursesV1ResponseMultiError is an error wrapping multiple validation
+// errors returned by ListCoursesV1Response.ValidateAll() if the designated
+// constraints aren't met.
+type ListCoursesV1ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCoursesV1ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCoursesV1ResponseMultiError) AllErrors() []error { return m }
 
 // ListCoursesV1ResponseValidationError is the validation error returned by
 // ListCoursesV1Response.Validate if the designated constraints aren't met.
@@ -285,21 +430,60 @@ var _ interface {
 
 // Validate checks the field values on DescribeCourseV1Request with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *DescribeCourseV1Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DescribeCourseV1Request with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DescribeCourseV1RequestMultiError, or nil if none found.
+func (m *DescribeCourseV1Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DescribeCourseV1Request) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if m.GetCourseId() <= 0 {
-		return DescribeCourseV1RequestValidationError{
+		err := DescribeCourseV1RequestValidationError{
 			field:  "CourseId",
 			reason: "value must be greater than 0",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DescribeCourseV1RequestMultiError(errors)
 	}
 
 	return nil
 }
+
+// DescribeCourseV1RequestMultiError is an error wrapping multiple validation
+// errors returned by DescribeCourseV1Request.ValidateAll() if the designated
+// constraints aren't met.
+type DescribeCourseV1RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DescribeCourseV1RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DescribeCourseV1RequestMultiError) AllErrors() []error { return m }
 
 // DescribeCourseV1RequestValidationError is the validation error returned by
 // DescribeCourseV1Request.Validate if the designated constraints aren't met.
@@ -359,13 +543,46 @@ var _ interface {
 
 // Validate checks the field values on DescribeCourseV1Response with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *DescribeCourseV1Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DescribeCourseV1Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DescribeCourseV1ResponseMultiError, or nil if none found.
+func (m *DescribeCourseV1Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DescribeCourseV1Response) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetCourse()).(interface{ Validate() error }); ok {
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetCourse()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, DescribeCourseV1ResponseValidationError{
+					field:  "Course",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, DescribeCourseV1ResponseValidationError{
+					field:  "Course",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCourse()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return DescribeCourseV1ResponseValidationError{
 				field:  "Course",
@@ -375,8 +592,29 @@ func (m *DescribeCourseV1Response) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return DescribeCourseV1ResponseMultiError(errors)
+	}
+
 	return nil
 }
+
+// DescribeCourseV1ResponseMultiError is an error wrapping multiple validation
+// errors returned by DescribeCourseV1Response.ValidateAll() if the designated
+// constraints aren't met.
+type DescribeCourseV1ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DescribeCourseV1ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DescribeCourseV1ResponseMultiError) AllErrors() []error { return m }
 
 // DescribeCourseV1ResponseValidationError is the validation error returned by
 // DescribeCourseV1Response.Validate if the designated constraints aren't met.
@@ -436,25 +674,64 @@ var _ interface {
 
 // Validate checks the field values on CreateCourseV1Request with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *CreateCourseV1Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateCourseV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateCourseV1RequestMultiError, or nil if none found.
+func (m *CreateCourseV1Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateCourseV1Request) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if m.GetCourse() == nil {
-		return CreateCourseV1RequestValidationError{
+		err := CreateCourseV1RequestValidationError{
 			field:  "Course",
 			reason: "value is required",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if a := m.GetCourse(); a != nil {
 
 	}
 
+	if len(errors) > 0 {
+		return CreateCourseV1RequestMultiError(errors)
+	}
+
 	return nil
 }
+
+// CreateCourseV1RequestMultiError is an error wrapping multiple validation
+// errors returned by CreateCourseV1Request.ValidateAll() if the designated
+// constraints aren't met.
+type CreateCourseV1RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateCourseV1RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateCourseV1RequestMultiError) AllErrors() []error { return m }
 
 // CreateCourseV1RequestValidationError is the validation error returned by
 // CreateCourseV1Request.Validate if the designated constraints aren't met.
@@ -514,21 +791,60 @@ var _ interface {
 
 // Validate checks the field values on CreateCourseV1Response with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *CreateCourseV1Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateCourseV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateCourseV1ResponseMultiError, or nil if none found.
+func (m *CreateCourseV1Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateCourseV1Response) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if m.GetCourseId() <= 0 {
-		return CreateCourseV1ResponseValidationError{
+		err := CreateCourseV1ResponseValidationError{
 			field:  "CourseId",
 			reason: "value must be greater than 0",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CreateCourseV1ResponseMultiError(errors)
 	}
 
 	return nil
 }
+
+// CreateCourseV1ResponseMultiError is an error wrapping multiple validation
+// errors returned by CreateCourseV1Response.ValidateAll() if the designated
+// constraints aren't met.
+type CreateCourseV1ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateCourseV1ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateCourseV1ResponseMultiError) AllErrors() []error { return m }
 
 // CreateCourseV1ResponseValidationError is the validation error returned by
 // CreateCourseV1Response.Validate if the designated constraints aren't met.
@@ -588,21 +904,60 @@ var _ interface {
 
 // Validate checks the field values on RemoveCourseV1Request with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *RemoveCourseV1Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RemoveCourseV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RemoveCourseV1RequestMultiError, or nil if none found.
+func (m *RemoveCourseV1Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RemoveCourseV1Request) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if m.GetCourseId() <= 0 {
-		return RemoveCourseV1RequestValidationError{
+		err := RemoveCourseV1RequestValidationError{
 			field:  "CourseId",
 			reason: "value must be greater than 0",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return RemoveCourseV1RequestMultiError(errors)
 	}
 
 	return nil
 }
+
+// RemoveCourseV1RequestMultiError is an error wrapping multiple validation
+// errors returned by RemoveCourseV1Request.ValidateAll() if the designated
+// constraints aren't met.
+type RemoveCourseV1RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RemoveCourseV1RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RemoveCourseV1RequestMultiError) AllErrors() []error { return m }
 
 // RemoveCourseV1RequestValidationError is the validation error returned by
 // RemoveCourseV1Request.Validate if the designated constraints aren't met.
@@ -662,16 +1017,51 @@ var _ interface {
 
 // Validate checks the field values on RemoveCourseV1Response with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *RemoveCourseV1Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RemoveCourseV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RemoveCourseV1ResponseMultiError, or nil if none found.
+func (m *RemoveCourseV1Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RemoveCourseV1Response) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	// no validation rules for Found
+
+	if len(errors) > 0 {
+		return RemoveCourseV1ResponseMultiError(errors)
+	}
 
 	return nil
 }
+
+// RemoveCourseV1ResponseMultiError is an error wrapping multiple validation
+// errors returned by RemoveCourseV1Response.ValidateAll() if the designated
+// constraints aren't met.
+type RemoveCourseV1ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RemoveCourseV1ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RemoveCourseV1ResponseMultiError) AllErrors() []error { return m }
 
 // RemoveCourseV1ResponseValidationError is the validation error returned by
 // RemoveCourseV1Response.Validate if the designated constraints aren't met.
@@ -731,25 +1121,64 @@ var _ interface {
 
 // Validate checks the field values on UpdateCourseV1Request with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *UpdateCourseV1Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateCourseV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateCourseV1RequestMultiError, or nil if none found.
+func (m *UpdateCourseV1Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateCourseV1Request) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if m.GetCourse() == nil {
-		return UpdateCourseV1RequestValidationError{
+		err := UpdateCourseV1RequestValidationError{
 			field:  "Course",
 			reason: "value is required",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if a := m.GetCourse(); a != nil {
 
 	}
 
+	if len(errors) > 0 {
+		return UpdateCourseV1RequestMultiError(errors)
+	}
+
 	return nil
 }
+
+// UpdateCourseV1RequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateCourseV1Request.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateCourseV1RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateCourseV1RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateCourseV1RequestMultiError) AllErrors() []error { return m }
 
 // UpdateCourseV1RequestValidationError is the validation error returned by
 // UpdateCourseV1Request.Validate if the designated constraints aren't met.
@@ -809,16 +1238,51 @@ var _ interface {
 
 // Validate checks the field values on UpdateCourseV1Response with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *UpdateCourseV1Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateCourseV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateCourseV1ResponseMultiError, or nil if none found.
+func (m *UpdateCourseV1Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateCourseV1Response) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	// no validation rules for Found
+
+	if len(errors) > 0 {
+		return UpdateCourseV1ResponseMultiError(errors)
+	}
 
 	return nil
 }
+
+// UpdateCourseV1ResponseMultiError is an error wrapping multiple validation
+// errors returned by UpdateCourseV1Response.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateCourseV1ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateCourseV1ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateCourseV1ResponseMultiError) AllErrors() []error { return m }
 
 // UpdateCourseV1ResponseValidationError is the validation error returned by
 // UpdateCourseV1Response.Validate if the designated constraints aren't met.
@@ -878,23 +1342,60 @@ var _ interface {
 
 // Validate checks the field values on MultiCreateCourseV1Request with the
 // rules defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *MultiCreateCourseV1Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on MultiCreateCourseV1Request with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// MultiCreateCourseV1RequestMultiError, or nil if none found.
+func (m *MultiCreateCourseV1Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *MultiCreateCourseV1Request) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if len(m.GetCourses()) < 1 {
-		return MultiCreateCourseV1RequestValidationError{
+		err := MultiCreateCourseV1RequestValidationError{
 			field:  "Courses",
 			reason: "value must contain at least 1 item(s)",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	for idx, item := range m.GetCourses() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, MultiCreateCourseV1RequestValidationError{
+						field:  fmt.Sprintf("Courses[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, MultiCreateCourseV1RequestValidationError{
+						field:  fmt.Sprintf("Courses[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return MultiCreateCourseV1RequestValidationError{
 					field:  fmt.Sprintf("Courses[%v]", idx),
@@ -906,8 +1407,29 @@ func (m *MultiCreateCourseV1Request) Validate() error {
 
 	}
 
+	if len(errors) > 0 {
+		return MultiCreateCourseV1RequestMultiError(errors)
+	}
+
 	return nil
 }
+
+// MultiCreateCourseV1RequestMultiError is an error wrapping multiple
+// validation errors returned by MultiCreateCourseV1Request.ValidateAll() if
+// the designated constraints aren't met.
+type MultiCreateCourseV1RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m MultiCreateCourseV1RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m MultiCreateCourseV1RequestMultiError) AllErrors() []error { return m }
 
 // MultiCreateCourseV1RequestValidationError is the validation error returned
 // by MultiCreateCourseV1Request.Validate if the designated constraints aren't met.
@@ -967,16 +1489,49 @@ var _ interface {
 
 // Validate checks the field values on MultiCreateCourseV1Response with the
 // rules defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *MultiCreateCourseV1Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on MultiCreateCourseV1Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// MultiCreateCourseV1ResponseMultiError, or nil if none found.
+func (m *MultiCreateCourseV1Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *MultiCreateCourseV1Response) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	for idx, item := range m.GetNotSaved() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, MultiCreateCourseV1ResponseValidationError{
+						field:  fmt.Sprintf("NotSaved[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, MultiCreateCourseV1ResponseValidationError{
+						field:  fmt.Sprintf("NotSaved[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return MultiCreateCourseV1ResponseValidationError{
 					field:  fmt.Sprintf("NotSaved[%v]", idx),
@@ -990,8 +1545,29 @@ func (m *MultiCreateCourseV1Response) Validate() error {
 
 	// no validation rules for Error
 
+	if len(errors) > 0 {
+		return MultiCreateCourseV1ResponseMultiError(errors)
+	}
+
 	return nil
 }
+
+// MultiCreateCourseV1ResponseMultiError is an error wrapping multiple
+// validation errors returned by MultiCreateCourseV1Response.ValidateAll() if
+// the designated constraints aren't met.
+type MultiCreateCourseV1ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m MultiCreateCourseV1ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m MultiCreateCourseV1ResponseMultiError) AllErrors() []error { return m }
 
 // MultiCreateCourseV1ResponseValidationError is the validation error returned
 // by MultiCreateCourseV1Response.Validate if the designated constraints

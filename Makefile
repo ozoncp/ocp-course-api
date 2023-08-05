@@ -2,7 +2,7 @@ trim_right_slash = $(patsubst %/,%,$(1))
 
 go_path = $(shell go env GOPATH)
 
-protoc_gen_validate = github.com/envoyproxy/protoc-gen-validate@v0.6.1
+protoc_gen_validate = github.com/envoyproxy/protoc-gen-validate@v1.0.2
 
 pb_includes=-I./vendor.protogen
 pb_includes+=-I$(go_path)/pkg/mod/$(protoc_gen_validate)
@@ -112,7 +112,9 @@ tidy:
 clean:
 	#rm -rf $(executable) $(filter-out pkg/%,$(generated))
 	rm -rf $(executable)
-	go clean -cache -testcache $(call trim_right_slash, $(sort $(dir $(go_files))))
+	go clean  $(call trim_right_slash, $(sort $(dir $(go_files))))
+	go clean -cache
+	go clean -testcache
 
 clean_generate:
 	rm -rf $(generated)
@@ -134,10 +136,9 @@ go get github.com/onsi/ginkgo/ginkgo
 go get github.com/golang/mock/mockgen
 go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 go get -d github.com/envoyproxy/protoc-gen-validate
-go get github.com/golang/protobuf/descriptor@v1.5.2
-go get github.com/golang/protobuf/proto@v1.5.2
-go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+go get google.golang.org/protobuf/proto@v1.31.0
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 go install $(protoc_gen_validate)
 mkdir -p vendor.protogen
