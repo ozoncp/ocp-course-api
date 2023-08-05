@@ -36,7 +36,7 @@ func NewRepoCourse(ctx context.Context, db *sqlx.DB) repo.RepoModelCourse {
 	return &repoCourse{ctx: ctx, db: db}
 }
 
-func (r *repoCourse) DescribeModelCourse(id uint64) (model.Course, error) {
+func (r *repoCourse) Describe(id uint64) (model.Course, error) {
 	query := sq.Select("id", "classroom_id", "name", "stream").
 		From(courseTableName).
 		Where(sq.Eq{"id": id}).
@@ -54,7 +54,7 @@ func (r *repoCourse) DescribeModelCourse(id uint64) (model.Course, error) {
 	}
 	return &course, nil
 }
-func (r *repoCourse) ListModelCourses(limit uint64, offset uint64) ([]model.Course, error) {
+func (r *repoCourse) List(limit uint64, offset uint64) ([]model.Course, error) {
 	query := sq.Select("id", "classroom_id", "name", "stream").
 		From(courseTableName).
 		Limit(limit).
@@ -83,7 +83,7 @@ func (r *repoCourse) ListModelCourses(limit uint64, offset uint64) ([]model.Cour
 	return courses, nil
 }
 
-func (r *repoCourse) AddModelCourse(v model.Course) (uint64, error) {
+func (r *repoCourse) Add(v model.Course) (uint64, error) {
 	query := sq.Insert(courseTableName).
 		Columns("id", "classroom_id", "name", "stream").
 		Values(v.GetId(), v.GetClassroomId(), v.GetName(), v.GetStream()).
@@ -96,7 +96,7 @@ func (r *repoCourse) AddModelCourse(v model.Course) (uint64, error) {
 	return v.GetId(), nil
 }
 
-func (r *repoCourse) AddModelCourses(vs []model.Course) error {
+func (r *repoCourse) Adds(vs []model.Course) error {
 	query := sq.Insert(courseTableName).
 		Columns("id", "classroom_id", "name", "stream").
 		RunWith(r.db).
@@ -111,7 +111,7 @@ func (r *repoCourse) AddModelCourses(vs []model.Course) error {
 	return err
 }
 
-func (r *repoCourse) RemoveModelCourse(id uint64) error {
+func (r *repoCourse) Remove(id uint64) error {
 	query := sq.Delete(courseTableName).
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
@@ -124,7 +124,7 @@ func (r *repoCourse) RemoveModelCourse(id uint64) error {
 	return err
 }
 
-func (r *repoCourse) UpdateModelCourse(v model.Course) error {
+func (r *repoCourse) Update(v model.Course) error {
 	query := sq.Update(courseTableName).
 		Set("classroom_id", v.GetClassroomId()).
 		Set("name", v.GetName()).

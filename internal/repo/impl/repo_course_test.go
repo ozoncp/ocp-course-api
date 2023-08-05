@@ -33,22 +33,22 @@ func TestRepoCourseAddAndDescripbe(t *testing.T) {
 	d := &ocp_course_api.Course{
 		Id: 1, ClassroomId: 1, Name: "cpp2go", Stream: "spring'21"}
 
-	id, err := repo.AddModelCourse(d)
+	id, err := repo.Add(d)
 	assert.Nil(t, err)
 	assert.Equal(t, d.GetId(), id)
 
-	got, err := repo.DescribeModelCourse(d.GetId())
+	got, err := repo.Describe(d.GetId())
 	assert.Nil(t, err)
 	CourseEqual(t, d, got)
 
-	err = repo.RemoveModelCourse(d.GetId())
+	err = repo.Remove(d.GetId())
 	assert.Nil(t, err)
 
-	_, err = repo.DescribeModelCourse(d.GetId())
+	_, err = repo.Describe(d.GetId())
 	assert.NotNil(t, err)
 	assert.ErrorIs(t, err, sql.ErrNoRows)
 
-	err = repo.RemoveModelCourse(d.GetId())
+	err = repo.Remove(d.GetId())
 	assert.NotNil(t, err)
 	assert.ErrorIs(t, err, sql.ErrNoRows)
 }
@@ -63,16 +63,16 @@ func TestRepoCourseMulipleAddAndList(t *testing.T) {
 		&ocp_course_api.Course{Id: 5, ClassroomId: 1, Name: "1,2,3,go", Stream: "autumn'21"},
 	}
 
-	err := repo.AddModelCourses(ds)
+	err := repo.Adds(ds)
 	assert.Nil(t, err)
 
-	got1, err := repo.ListModelCourses(3, 0)
+	got1, err := repo.List(3, 0)
 	assert.Nil(t, err)
 	CourseEqual(t, ds[0], got1[0])
 	CourseEqual(t, ds[1], got1[1])
 	CourseEqual(t, ds[2], got1[2])
 
-	got2, err := repo.ListModelCourses(3, 3)
+	got2, err := repo.List(3, 3)
 	assert.Nil(t, err)
 	CourseEqual(t, ds[3], got2[0])
 	CourseEqual(t, ds[4], got2[1])
@@ -85,13 +85,13 @@ func TestRepoCourseUpdate(t *testing.T) {
 	d2 := &ocp_course_api.Course{
 		Id: d1.GetId(), ClassroomId: 2, Name: "C++ to Go", Stream: "Summer'21"}
 
-	_, err := repo.AddModelCourse(d1)
+	_, err := repo.Add(d1)
 	assert.Nil(t, err)
 
-	err = repo.UpdateModelCourse(d2)
+	err = repo.Update(d2)
 	assert.Nil(t, err)
 
-	got, err := repo.DescribeModelCourse(d1.GetId())
+	got, err := repo.Describe(d1.GetId())
 	assert.Nil(t, err)
 	CourseEqual(t, d2, got)
 }
