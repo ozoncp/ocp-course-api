@@ -43,7 +43,7 @@ func (s *ocpLessonApiServer) ListLessonsV1(
 	defer span.Finish()
 
 	log.Info().Msgf("ListLessonsV1Request %v", req)
-	lessons, err := s.repo.ListModelLessons(req.Limit, req.Offset)
+	lessons, err := s.repo.List(req.Limit, req.Offset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			span.SetTag("result", "NotFound")
@@ -72,7 +72,7 @@ func (s *ocpLessonApiServer) DescribeLessonV1(
 
 	log.Info().Msgf("DescribeLessonV1Request: %v", req)
 
-	lesson, err := s.repo.DescribeModelLesson(req.LessonId)
+	lesson, err := s.repo.Describe(req.LessonId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			span.SetTag("result", "NotFound")
@@ -98,7 +98,7 @@ func (s *ocpLessonApiServer) CreateLessonV1(
 	log.Info().Msgf("CreateLessonV1Request: %v", req)
 	im.IncIncomingRequests("CreateLessonV1")
 
-	id, err := s.repo.AddModelLesson(req.Lesson)
+	id, err := s.repo.Add(req.Lesson)
 	if err != nil {
 		span.SetTag("result", "Fail")
 		span.LogFields(otl.String("error", err.Error()))
@@ -123,7 +123,7 @@ func (s *ocpLessonApiServer) RemoveLessonV1(
 
 	log.Info().Msgf("RemoveLessonV1Request: %v", req)
 	im.IncIncomingRequests("RemoveLessonV1")
-	err := s.repo.RemoveModelLesson(req.LessonId)
+	err := s.repo.Remove(req.LessonId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			span.SetTag("result", "NotFound")
@@ -151,7 +151,7 @@ func (s *ocpLessonApiServer) UpdateLessonV1(
 	span.LogFields(otl.Uint64("id", req.Lesson.Id))
 
 	im.IncIncomingRequests("UpdateLessonV1")
-	err := s.repo.UpdateModelLesson(req.Lesson)
+	err := s.repo.Update(req.Lesson)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			span.SetTag("result", "NotFound")
@@ -191,7 +191,7 @@ func (s *ocpLessonApiServer) MultiCreateLessonV1(
 		for _, l := range ls {
 			ds = append(ds, l)
 		}
-		err := s.repo.AddModelLessons(ds)
+		err := s.repo.Adds(ds)
 		if err != nil {
 			childSpan.SetTag("result", "Fail")
 			childSpan.LogFields(otl.String("error", err.Error()))

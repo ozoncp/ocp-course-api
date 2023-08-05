@@ -16,19 +16,13 @@ go_files = $(filter-out %.pb.go, \
 
 test_files = $(filter %_test.go, $(go_files))
 
-generics = $(filter %_generic.go, $(go_files))
-
-generated = $(generics:.go=.go.gen.go)
-
 mocks = $(shell grep -o "^[^\#%]\+go.mock.go:" Makefile | sed 's/\([^:]\+\)\:/\1/' | paste -sd ' ')
 pbs = $(shell grep -o "^[^\#%]\+\(pb.go\|pb.gw.go\|pb.validate.go\):" Makefile | sed 's/\([^:]\+\)\:/\1/' | paste -sd ' ')
 
-generated += $(mocks)
+generated = $(mocks)
 generated += $(pbs)
 generated += swagger/ocp-course-api.swagger.json
 generated += swagger/ocp-lesson-api.swagger.json
-
-pkgs_with_generics = $(call trim_right_slash, $(sort $(dir $(generics))))
 
 pkgs_with_test = $(call trim_right_slash, $(sort $(dir $(test_files))))
 
@@ -45,8 +39,6 @@ $(executable): $(generated) $(filter-out %_test.go, $(go_files))
 go.sum: go.mod
 	$(run-prepare)
 
-internal/mock_repo/repo.go.mock.go: internal/repo/repo_generic.go
-
 pkg/ocp-course-api/course_service.pb.go: api/ocp-course-api/course_service.proto
 pkg/ocp-course-api/course_service.pb.validate.go: api/ocp-course-api/course_service.proto
 pkg/ocp-course-api/course_service_grpc.pb.go: api/ocp-course-api/course_service.proto
@@ -60,11 +52,6 @@ pkg/ocp-lesson-api/lesson_service_grpc.pb.go: api/ocp-lesson-api/lesson_service.
 pkg/ocp-lesson-api/lesson_service.pb.gw.go: api/ocp-lesson-api/lesson_service.proto
 
 swagger/ocp-lesson-api.swagger.json:api/ocp-lesson-api/lesson_service.proto
-
-%generic.go.gen.go: %generic.go
-	@gen_types=$(shell grep '//go:generate .*genny' $< | head -n 1 | sed 's/^.\+ gen \(".\+"\)$$/\1/');\
-	echo genny -out $@ -in $< gen "$${gen_types}";\
-	genny -out $@ -in $< gen "$${gen_types}"
 
 %.swagger.json:
 	mkdir -p $(@D)
@@ -131,7 +118,6 @@ generate: $(generated)
 
 define run-prepare =
 go mod download
-go get github.com/cheekybits/genny
 go get github.com/onsi/ginkgo/ginkgo
 go get github.com/golang/mock/mockgen
 go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway

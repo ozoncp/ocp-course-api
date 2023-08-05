@@ -33,22 +33,22 @@ func TestRepoLessonAddAndDescripbe(t *testing.T) {
 	d := &ocp_lesson_api.Lesson{
 		Id: 1, CourseId: 1, Number: 1, Name: "intro"}
 
-	id, err := repo.AddModelLesson(d)
+	id, err := repo.Add(d)
 	assert.Nil(t, err)
 	assert.Equal(t, d.GetId(), id)
 
-	got, err := repo.DescribeModelLesson(d.GetId())
+	got, err := repo.Describe(d.GetId())
 	assert.Nil(t, err)
 	LessonEqual(t, d, got)
 
-	err = repo.RemoveModelLesson(d.GetId())
+	err = repo.Remove(d.GetId())
 	assert.Nil(t, err)
 
-	_, err = repo.DescribeModelLesson(d.GetId())
+	_, err = repo.Describe(d.GetId())
 	assert.NotNil(t, err)
 	assert.ErrorIs(t, err, sql.ErrNoRows)
 
-	err = repo.RemoveModelLesson(d.GetId())
+	err = repo.Remove(d.GetId())
 	assert.NotNil(t, err)
 	assert.ErrorIs(t, err, sql.ErrNoRows)
 }
@@ -63,16 +63,16 @@ func TestRepoLessonMulipleAddAndList(t *testing.T) {
 		&ocp_lesson_api.Lesson{Id: 5, CourseId: 2, Number: 2, Name: "basic"},
 	}
 
-	err := repo.AddModelLessons(ds)
+	err := repo.Adds(ds)
 	assert.Nil(t, err)
 
-	got1, err := repo.ListModelLessons(3, 0)
+	got1, err := repo.List(3, 0)
 	assert.Nil(t, err)
 	LessonEqual(t, ds[0], got1[0])
 	LessonEqual(t, ds[1], got1[1])
 	LessonEqual(t, ds[2], got1[2])
 
-	got2, err := repo.ListModelLessons(3, 3)
+	got2, err := repo.List(3, 3)
 	assert.Nil(t, err)
 	LessonEqual(t, ds[3], got2[0])
 	LessonEqual(t, ds[4], got2[1])
@@ -85,13 +85,13 @@ func TestRepoLessonUpdate(t *testing.T) {
 	d2 := &ocp_lesson_api.Lesson{
 		Id: d1.GetId(), CourseId: 2, Number: 5, Name: "welcome"}
 
-	_, err := repo.AddModelLesson(d1)
+	_, err := repo.Add(d1)
 	assert.Nil(t, err)
 
-	err = repo.UpdateModelLesson(d2)
+	err = repo.Update(d2)
 	assert.Nil(t, err)
 
-	got, err := repo.DescribeModelLesson(d1.GetId())
+	got, err := repo.Describe(d1.GetId())
 	assert.Nil(t, err)
 	LessonEqual(t, d2, got)
 }

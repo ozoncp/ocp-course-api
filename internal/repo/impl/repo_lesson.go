@@ -36,7 +36,7 @@ func NewRepoLesson(ctx context.Context, db *sqlx.DB) repo.RepoModelLesson {
 	return &repoLesson{ctx: ctx, db: db}
 }
 
-func (r *repoLesson) DescribeModelLesson(id uint64) (model.Lesson, error) {
+func (r *repoLesson) Describe(id uint64) (model.Lesson, error) {
 	query := sq.Select("id", "course_id", "number", "name").
 		From(lessonTableName).
 		Where(sq.Eq{"id": id}).
@@ -54,7 +54,7 @@ func (r *repoLesson) DescribeModelLesson(id uint64) (model.Lesson, error) {
 	}
 	return &lesson, nil
 }
-func (r *repoLesson) ListModelLessons(limit uint64, offset uint64) ([]model.Lesson, error) {
+func (r *repoLesson) List(limit uint64, offset uint64) ([]model.Lesson, error) {
 	query := sq.Select("id", "course_id", "number", "name").
 		From(lessonTableName).
 		Limit(limit).
@@ -83,7 +83,7 @@ func (r *repoLesson) ListModelLessons(limit uint64, offset uint64) ([]model.Less
 	return lessons, nil
 }
 
-func (r *repoLesson) AddModelLesson(v model.Lesson) (uint64, error) {
+func (r *repoLesson) Add(v model.Lesson) (uint64, error) {
 	query := sq.Insert(lessonTableName).
 		Columns("id", "course_id", "number", "name").
 		Values(v.GetId(), v.GetCourseId(), v.GetNumber(), v.GetName()).
@@ -96,7 +96,7 @@ func (r *repoLesson) AddModelLesson(v model.Lesson) (uint64, error) {
 	return v.GetId(), nil
 }
 
-func (r *repoLesson) AddModelLessons(vs []model.Lesson) error {
+func (r *repoLesson) Adds(vs []model.Lesson) error {
 	query := sq.Insert(lessonTableName).
 		Columns("id", "course_id", "number", "name").
 		RunWith(r.db).
@@ -111,7 +111,7 @@ func (r *repoLesson) AddModelLessons(vs []model.Lesson) error {
 	return err
 }
 
-func (r *repoLesson) RemoveModelLesson(id uint64) error {
+func (r *repoLesson) Remove(id uint64) error {
 	query := sq.Delete(lessonTableName).
 		Where(sq.Eq{"id": id}).
 		RunWith(r.db).
@@ -124,7 +124,7 @@ func (r *repoLesson) RemoveModelLesson(id uint64) error {
 	return err
 }
 
-func (r *repoLesson) UpdateModelLesson(v model.Lesson) error {
+func (r *repoLesson) Update(v model.Lesson) error {
 	query := sq.Update(lessonTableName).
 		Set("course_id", v.GetCourseId()).
 		Set("number", v.GetNumber()).
